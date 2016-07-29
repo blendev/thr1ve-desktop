@@ -1,0 +1,651 @@
+﻿<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="SKYPE_TOOLBAR" content="SKYPE_TOOLBAR_PARSER_COMPATIBLE" />
+    <title>THR1VE</title>
+    <link href="css/jquery.mobile.structure-1.4.5.min.css" rel="stylesheet" />
+
+    <link href="http://fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet" type="text/css" />
+    <link href="http://allfont.net/allfont.css?fonts=montserrat-light" rel="stylesheet" type="text/css" />
+    <!-- WEBSITE CSS -->
+    <link rel="stylesheet" href="css/website.min.css" type="text/css">
+    <!-- MAIN CSS -->
+    <link rel="stylesheet" href="style.css" type="text/css">
+    <!-- RESPONSIVE CSS -->
+    <link rel="stylesheet" href="css/responsive.css" type="text/css">
+    <script src="js/jquery-1.11.1.min.js"></script>
+
+    <script src="js/jquery.mobile-1.4.5.min.js"></script>
+    <script src="js/jquery.validate.min.js"></script>
+
+    <script type="text/javascript" src="js/common.js"></script>
+    <script type="text/javascript" src="js/session.js"></script>
+    <script src="js/easyResponsiveTabs.js" type="text/javascript"></script>
+    <script src="js/pagefunctions.js" type="text/javascript"></script>
+    <script src="js/Braintree.js"></script>
+
+    <script defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBsogG1ugDpe8oMdpXgAFVT2Fcamic3blQ&callback=initMap"></script>
+
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        #map {
+            width: 100%;
+            height: 500px;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Start index page -->
+    <div data-role="page" id="indexpage">
+        <!-- wraper_header -->
+        <header class="wraper_header">
+            <!-- wraper_header_main -->
+            <div class="wraper_header_main">
+                <div class="container">
+                    <!-- row -->
+                    <div class="row">
+                        <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                            <!-- header_main -->
+                            <div class="header_main">
+                                <!-- logo -->
+                                <div class="logo">
+                                    <a href="#"><img src="images/logo.jpg" alt="logo" width="125" height="43"></a>
+                                </div>
+                                <!-- logo -->
+                                <!-- nav -->
+                                <nav class="nav pull-left hidden">
+                                    <ul>
+                                        <li>Picking up from:  <a href="#">(change)</a></li>
+                                        <li>@ <a href="#">(change)</a></li>
+                                    </ul>
+                                </nav>
+                                <!-- nav -->
+                                <!-- nav -->
+                                <nav class="nav menu pull-right">
+                                    <ul>
+                                        <li class="icon account"><a href="#">ACCOUNT | LOG IN</a></li>
+                                        <li class="icon cart"><a href="#">VIEW ORDER</a></li>
+                                    </ul>
+                                </nav>
+                                <!-- nav -->
+                            </div>
+                            <!-- header_main -->
+                        </div>
+                    </div>
+                    <!-- row -->
+                </div>
+            </div>
+            <!-- wraper_header_main -->
+        </header>
+        <!-- wraper_header -->
+        <!-- main -->
+        <main class="main">
+            <!-- wraper_location_where -->
+            <div class="wraper_location_where">
+                <div class="container">
+                    <!-- row -->
+                    <div class="row location_where">
+                        <div class="col-lg-4 col-md-4 col-sm-5 col-xs-12">
+                            <!-- location_where_detect -->
+                            <div class="location_where_detect">
+                                <h1>Where are you?</h1>
+                                <h2>Find your nearest THR1VE store for your order pick up.</h2>
+                                <h3>Select your store or<strong> Click the compass</strong> to find your nearest store.</h3>
+                                <div class="location-detect-form">
+                                    <form id="indexform">
+                                        <div class="form_field clearfix pickup-field-sec">
+                                            <!--<label>Pick up from:</label>-->
+                                            <div class="custom_select_box">
+                                                <select data-role="none" class="selectStore validation_pickup">
+                                                    <option value="0">Please Select</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="form_field clearfix pickup-field-sec">
+                                            <!--<label>Pick up time:</label>-->
+                                            <div class="custom_select_box">
+                                                <select data-role="none" class="selectTime validation_pickup">
+                                                    <option value="0" selected="selected">Select store first</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="form-row">
+                                            <input type="submit" value="Let's Go!" data-role="none">
+                                        </div>
+                                        <img class="indexform-after" src="images/compass.png" onclick="selectNearestStore(-1)" />
+                                    </form>
+                                </div>
+                                <p><strong>Don't stress (it's bad for you)</strong> <br> If you're unsure of which location is your nearest, you can always change your location before confirming your order.</p>
+                            </div>
+                            <!-- location_where_detect -->
+                        </div>
+                    </div>
+                    <!-- row -->
+                </div>
+            </div>
+            <!-- wraper_location_where -->
+        </main>
+        <!-- main -->
+    </div>
+
+
+
+
+    <!-- End index page -->
+    <!-- Start locations page -->
+    <div data-role="page" id="locationspage">
+        <header class="header clearfix">
+            <div class="logo"><img src="images/logo.jpg" alt="THR1VE" title="THR1VE"></div>
+        </header>
+        <section class="main">
+            <div class="product_details">
+                <div class="item_con map_sec" id="map">
+                    <div class="item1">
+                        <img src="images/location.jpg" alt="no img">
+                        <div class="map_loc">
+                            <span>Locate me and my <br> nearest store!</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="map_location">
+                    <div class="main_container">
+                        <p class="font1" id="locationHeader">Looks like you're in</p>
+                        <h2 id="currentCity"></h2>
+
+                        <div class="loc clearfix">
+                            <ul id="storeLocations">
+                                <!--<li class="clearfix">
+                                    <div class="loc_img"><img src="images/loc1.jpg" alt="no img"></div>
+                                    <div class="loc_cont">
+                                        <h3>Australia Square</h3>
+                                        <p>(02) 0000 0000 <br> Mon - Fri   7:00am - 4:00pm</p>
+                                        <h4>Aprox 3 kms</h4>
+                                        <input type="button" value="START ORDER" class="my_order locationOrder" data-role="none">
+                                    </div>
+                                </li>-->
+                                <!--<li class="clearfix">
+                                    <div class="loc_img"><img src="images/loc1.jpg" alt="no img"></div>
+                                    <div class="loc_cont">
+                                        <h3>Australia Square</h3>
+                                        <p>(02) 0000 0000 <br> Mon - Fri   7:00am - 4:00pm</p>
+                                        <h4>Aprox 3 kms</h4>
+                                        <input type="button" value="START ORDER" class="my_order locationOrder" data-role="none">
+                                    </div>
+                                </li>
+                                <li class="clearfix">
+                                    <div class="loc_img"><img src="images/loc1.jpg" alt="no img"></div>
+                                    <div class="loc_cont">
+                                        <h3>Australia Square</h3>
+                                        <p>(02) 0000 0000 <br> Mon - Fri   7:00am - 4:00pm</p>
+                                        <h4>Aprox 3 kms</h4>
+                                        <input type="button" value="START ORDER" class="my_order locationOrder" data-role="none">
+                                    </div>
+                                </li>-->
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+    </div>
+    <!-- End locations page -->
+    <!-- Start menu page -->
+    <div data-role="page" id="menupage">
+        <!-- wraper_header -->
+        <header class="wraper_header">
+            <!-- wraper_header_main -->
+            <div class="wraper_header_main">
+                <div class="container">
+                    <!-- row -->
+                    <div class="row">
+                        <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                            <!-- header_main -->
+                            <div class="header_main">
+                                <!-- logo -->
+                                <div class="logo">
+                                    <a href="#"><img src="images/logo.jpg" alt="logo" width="125" height="43"></a>
+                                </div>
+                                <!-- logo -->
+                                <!-- nav -->
+                                <nav class="nav pull-left">
+                                    <ul>
+                                        <li>Picking up from: <span id="currentSelectedStore"></span> <a href="#">(change)</a></li>
+                                        <li>@ <span id="currentSelectedTime"></span> <a href="#">(change)</a></li>
+                                    </ul>
+                                </nav>
+                                <!-- nav -->
+                                <!-- nav -->
+                                <nav class="nav menu pull-right">
+                                    <ul>
+                                        <li class="icon account"><a href="#">ACCOUNT | LOG IN</a></li>
+                                        <li class="icon cart"><a href="#">VIEW ORDER</a></li>
+                                    </ul>
+                                </nav>
+                                <!-- nav -->
+                            </div>
+                            <!-- header_main -->
+                        </div>
+                    </div>
+                    <!-- row -->
+                </div>
+            </div>
+            <!-- wraper_header_main -->
+        </header>
+        <!-- wraper_header -->
+        <!-- main -->
+        <main class="main">
+            <!-- wraper_inner_banner -->
+            <div class="wraper_inner_banner">
+                <div class="container-fluid">
+                    <!-- row -->
+                    <div class="row">
+                        <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                            <!-- inner_banner -->
+                            <div class="inner_banner">
+                                <img src="images/background/inner-banner.jpg" alt="" width="1605" height="248">
+                            </div>
+                            <!-- inner_banner -->
+                        </div>
+                    </div>
+                    <!-- row -->
+                </div>
+            </div>
+            <!-- wraper_inner_banner -->
+            <!-- wraper_menu_tab -->
+            <div class="wraper_menu_tab">
+                <div class="container">
+                    <!-- row -->
+                    <div class="row">
+                        <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                            <!-- menu_tab -->
+                            <div class="menu_tab">
+                                <ul class="nav-tabs">
+                                    <!--<li class="active"><a href="#Breakfast" data-toggle="tab">Breakfast</a></li>
+                                    <li><a href="#Lunch" data-toggle="tab">Lunch</a></li>
+                                    <li><a href="#Smoothies" data-toggle="tab">Smoothies</a></li>
+                                    <li><a href="#Snacks" data-toggle="tab">Snacks</a></li>
+                                    <li><a href="#Drinks" data-toggle="tab">Drinks</a></li>-->
+                                </ul>
+                            </div>
+                            <!-- menu_tab -->
+                        </div>
+                    </div>
+                    <!-- row -->
+                </div>
+            </div>
+            <div class="tab-content" id="mainProductDiv"></div>
+            <!-- wraper_menu_tab -->
+
+        </main>
+        <!-- main -->
+        <!-- jquery -->
+        <div class="modal fade" id="PickUpTimeSelect">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal">(close) <span aria-hidden="true">&times;</span></button>
+                    </div>
+                    <h3>YOUR ORDER</h3>
+                    <table border="0" cellspacing="0" cellpadding="0" class="table1"></table>
+                    <div class="modal-body">
+                        <!-- pick-up-time -->
+                        <div class="pick-up-time">
+                            <h3 style="margin-left:3%;">Looks delicious!</h3>
+                            <p>Just double chekcing your details before we start preparing...</p>
+                            <div class="pick-up-time-form">
+                                <form>
+                                    <div class="row">
+                                        <div class="col-lg-4 col-md-4 col-sm-4 col-xs-12">
+                                            <div class="form-row">
+                                                <label>Pick up time:</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-8 col-md-8 col-sm-8 col-xs-12">
+                                            <div class="form-row">
+                                                <select data-role="none" class="selectStore validation_pickup" id="checkoutSelectStore">
+                                                    <option value="0">Please Select</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-lg-4 col-md-4 col-sm-4 col-xs-12">
+                                            <div class="form-row">
+                                                <label>At this store:</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-8 col-md-8 col-sm-8 col-xs-12">
+                                            <div class="form-row">
+                                                <select data-role="none" class="selectTime validation_pickup">
+                                                    <option value="0" selected="selected">Select store first</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                                            <div class="form-row">
+                                                <a href="#" onclick="selectNearestStore(0)">Locate my closest store</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                                            <div class="form-row">
+                                                <input type="radio" name="pick-up-type">
+                                                <label style="margin-left: 15%; margin-top: 2%;">Take away <span>(Grabbing &amp; going)</span></label>
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                                            <div class="form-row">
+                                                <input type="radio" name="pick-up-type">
+                                                <label style="margin-left:15%; margin-top:2%;">Dine in <span>(Eating at the foodcourt)</span></label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>
+                                <div class="section-container checkout">
+                                    <div class="col-12 order-summary">
+                                        <div id="PersonalDetails" class="col">
+                                            <h2>Your details</h2>
+                                            <div class="row">
+                                                <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                                                    <div class="form-row">
+                                                        <input type="radio" checked="checked" name="user" id="newuser">
+                                                        <label style="margin-left: 15%; margin-top: 2%;">New user</label>
+                                                    </div>
+                                                </div>
+                                                <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                                                    <div class="form-row">
+                                                        <input type="radio" name="user" id="returnmember">
+                                                        <label style="margin-left:15%; margin-top:2%;">Returning member</label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <!--<div class="form_field clearfix">
+                                                <div class="cust_radio" style="width:49%;">
+                                                    <span>New user</span>
+                                                    <input type="radio" checked="checked" name="user" id="newuser" class="regular-radio" required /><label for="newuser"></label>
+                                                </div>
+
+                                                <div class="cust_radio" style="width:51%;">
+                                                    <span>Returning member</span>
+                                                    <input type="radio" name="user" id="returnmember" class="regular-radio" required /><label for="returnmember"></label>
+                                                </div>
+                                            </div>-->
+
+                                            <div id="customerLoginForm" style="display:none;">
+                                                <div class="row">
+                                                    <div class="col-lg-4 col-md-4 col-sm-4 col-xs-12">
+                                                        <div class="form-row">
+                                                            <label>Email Address *</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-lg-8 col-md-8 col-sm-8 col-xs-12">
+                                                        <div class="form-row">
+                                                            <input class="custom_text_box" type="text" name="customerEmailAddress" id="customerEmailAddress" required="required" />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <div class="col-lg-4 col-md-4 col-sm-4 col-xs-12">
+                                                        <div class="form-row">
+                                                            <label>Password *</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-lg-8 col-md-8 col-sm-8 col-xs-12">
+                                                        <div class="form-row">
+                                                            <input class="custom_text_box" type="password" name="customerPassword" id="customerPassword" required />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <input type="button" class="my_order" id="buttonLogin" value="Login">
+                                            </div>
+
+                                            <div id="returncustomerForm" style="display:none;">
+                                                <div class="form_field clearfix">
+                                                    <label for="customerEmailAddress">Email Address</label>
+                                                    <input class="custom_text_box" type="text" name="returncustomerEmailAddress" disabled="disabled" id="returncustomerEmailAddress"
+                                                           required="required" />
+                                                </div>
+                                            </div>
+
+                                            <div id="personalDetailsInner">
+                                                <div class="row">
+                                                    <div class="col-lg-4 col-md-4 col-sm-4 col-xs-12">
+                                                        <div class="form-row">
+                                                            <label>First name *</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-lg-8 col-md-8 col-sm-8 col-xs-12">
+                                                        <div class="form-row">
+                                                            <!--<select data-role="none" class="selectStore validation_pickup">
+                                                                <option value="0">Please Select</option>
+                                                            </select>-->
+                                                            <input class="custom_text_box" type="text" name="firstName" id="firstName"
+                                                                   required="required" />
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="row">
+                                                    <div class="col-lg-4 col-md-4 col-sm-4 col-xs-12">
+                                                        <div class="form-row">
+                                                            <label>Last name *</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-lg-8 col-md-8 col-sm-8 col-xs-12">
+                                                        <div class="form-row">
+                                                            <input class="custom_text_box" type="text" name="lastName" id="lastName" required />
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="row">
+                                                    <div class="col-lg-4 col-md-4 col-sm-4 col-xs-12">
+                                                        <div class="form-row">
+                                                            <label>Email *</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-lg-8 col-md-8 col-sm-8 col-xs-12">
+                                                        <div class="form-row">
+                                                            <input class="custom_text_box" type="email" name="emailAddress" id="emailAddress"
+                                                                   required />
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="row">
+                                                    <div class="col-lg-4 col-md-4 col-sm-4 col-xs-12">
+                                                        <div class="form-row">
+                                                            <label>Phone *</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-lg-8 col-md-8 col-sm-8 col-xs-12">
+                                                        <div class="form-row">
+                                                            <input class="custom_text_box" type="tel" name="phoneNumber" id="phoneNumber"
+                                                                   required />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <div class="col-lg-4 col-md-4 col-sm-4 col-xs-12">
+                                                        <div class="form-row">
+                                                            <label>Password</label>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div class="col-lg-8 col-md-8 col-sm-8 col-xs-12">
+                                                        <div class="form-row">
+                                                            <input class="custom_text_box" type="password" name="password" id="password"
+                                                                   required />
+
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <span class="font12">Enter a password to create an account for faster checkout next time.</span>
+                                            </div>
+
+                                            <div class="form_field clearfix">
+                                                <div class="radioCheck">
+                                                    <input type="checkbox" checked="checked" name="rememberme" id="rememberme"
+                                                           required />
+                                                    <label for="rememberme">Remember me next time</label>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                        <!-- Select Payment Type -->
+                                    </div>
+                                    <div class="clearfix"></div>
+                                </div>
+                                <div id="dropin-container"></div>
+                                <form id="checkout-form">
+                                    <input type="submit" class="my_order" value="PLACE ORDER">
+                                </form>
+                            </div>
+                        </div>
+                        <!-- pick-up-time -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- jquery -->
+        <!-- jquery -->
+        <div class="modal fade" id="MenuSelect">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal">(close) <span aria-hidden="true">&times;</span></button>
+                        <input id="mainVariantId" type="hidden" value="">
+                        <input id="mainProductId" type="hidden" value="">
+                    </div>
+                    <div class="modal-body">
+                        <!-- pick-up-time -->
+                        <div class="pick-up-time">
+                            <h3 id="selproductTitle"></h3>
+                            <h4 id="selproductPrice"></h4>
+                            <ul class="feature">
+                                <li class="veg visible"></li>
+                                <li class="milk visible"></li>
+                                <li class="juice visible"></li>
+                            </ul>
+                            <p id="selproductDescription"></p>
+                            <div id="divAddtocart">
+
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <tbody id="selproductExtras">
+                                        <!--<tr>
+                                            <td>Add Smashed Avocado</td>
+                                            <td>+2</td>
+                                            <td><a class="btn" href="#">Add</a></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Add Primal Toast</td>
+                                            <td>+2</td>
+                                            <td><a class="btn" href="#">Add</a></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Add BBQ sauce</td>
+                                            <td>+1</td>
+                                            <td><a class="btn" href="#">Add</a></td>
+                                        </tr>-->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <!-- pick-up-time -->
+                    </div>
+                </div>
+                <img src="" class="modal-content-before" id="selProductImage">
+            </div>
+        </div>
+        <!-- jquery -->
+    </div>
+    <!-- End menu page -->
+    <!-- Start product page -->
+    <!--<div data-role="page" id="productpage">
+        <header class="header clearfix">
+            <div class="logo"><img src="images/logo.jpg" alt="THR1VE" title="THR1VE"></div>
+            <div class="cart_sec">
+                <span class="popup1">VIEW ORDER</span>
+            </div>
+        </header>
+        <section class="main">
+            <form>
+                <div class="product_details">
+                    <div class="item_con">
+                        <div class="item1">
+                            <img id="productImage" src="images/item1.jpg">
+                            <a href="#menupage" class="img_pos3"><img src="images/cross.jpg" alt="no img"></a>
+                        </div>
+                        <div class="item_desc">
+                            <div class="main_container">
+                                <span class="img_pos"><img src="images/img2.jpg"><img src="images/img3.jpg"></span>
+                                <h2><span id="productTitle"></span><span id="productPrice"></span></h2>
+                                <p id="productDescription"></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="add_extra">
+                        <div class="main_container">
+                            <div id="productExtras" class="add_item clearfix">
+                            </div>
+
+                            <input type="button" value="ADD TO MY ORDER" class="my_order" data-role="none" onclick="addtocartCustom();" id="addtocartCustomBowl">
+                            <input type="button" value="ADD TO MY ORDER" class="my_order" data-role="none" onclick="addtocart();" id="addtoCart">
+                            <input type="button" value="ADD TO MY ORDER" class="my_order" data-role="none" onclick="addvarianttocart();" id="addvarianttoCart">
+                            <input type="button" value="next step" data-role="none" class="my_order" onclick="nextstep();" id="nextStep">
+                            <input type="button" value="next step" data-role="none" class="my_order" onclick="loadVariantExtras();" id="nextStepVariantExtra">
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </section>
+    </div>-->
+    <!-- End product page -->
+    <!-- Start checkout popup -->
+    <!-- Start loading modal -->
+    <!--<div class="modal"></div>-->
+    <!-- End loading modal -->
+    <!-- jquery -->
+    <!-- JQUERY LIBRARY JS -->
+    <!--<script src="js/jquery-1.12.4.min.js" type="text/javascript"></script>-->
+    <!-- BOOTSTRAP JS -->
+    <script src="js/bootstrap.min.js" type="text/javascript"></script>
+
+    <!-- WEBSITE JS -->
+    <script src="js/website.min.js" type="text/javascript"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            //$("#PickUpTimeSelect").modal("show");
+            $(".matchHeight").matchHeight();
+            $("[data-toggle='tooltip']").tooltip();
+            $("#infinity-scroll").enscroll({
+                showOnHover: true,
+                verticalTrackClass: 'infinity-scroll-bar',
+                verticalHandleClass: 'infinity-scroll-handle'
+            });
+        })
+    </script>
+
+    <!-- End confirmation popup -->
+    <!-- Start loading modal -->
+    <div class="modalprogress"></div>
+    <!-- End loading modal -->
+</body>
+</html>
