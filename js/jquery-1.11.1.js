@@ -1500,7 +1500,7 @@ Sizzle.uniqueSort = function( results ) {
 	}
 
 	// Clear input after sorting to release objects
-	// See https://github.com/jquery/sizzle/pull/225
+	// See http://github.com/jquery/sizzle/pull/225
 	sortInput = null;
 
 	return results;
@@ -4235,7 +4235,7 @@ var rcheckableType = (/^(?:checkbox|radio)$/i);
 		eventName = "on" + i;
 
 		if ( !(support[ i + "Bubbles" ] = eventName in window) ) {
-			// Beware of CSP restrictions (https://developer.mozilla.org/en/Security/CSP)
+			// Beware of CSP restrictions (http://developer.mozilla.org/en/Security/CSP)
 			div.setAttribute( eventName, "t" );
 			support[ i + "Bubbles" ] = div.attributes[ eventName ].expando === false;
 		}
@@ -6415,7 +6415,7 @@ var
 	ropacity = /opacity\s*=\s*([^)]*)/,
 
 	// swappable if display is none or starts with table except "table", "table-cell", or "table-caption"
-	// see here for display values: https://developer.mozilla.org/en-US/docs/CSS/display
+	// see here for display values: http://developer.mozilla.org/en-US/docs/CSS/display
 	rdisplayswap = /^(none|table(?!-c[ea]).+)/,
 	rnumsplit = new RegExp( "^(" + pnum + ")(.*)$", "i" ),
 	rrelNum = new RegExp( "^([+-])=(" + pnum + ")", "i" ),
@@ -6559,8 +6559,8 @@ function getWidthOrHeight( elem, name, extra ) {
 		isBorderBox = support.boxSizing && jQuery.css( elem, "boxSizing", false, styles ) === "border-box";
 
 	// some non-html elements return undefined for offsetWidth, so check for null/undefined
-	// svg - https://bugzilla.mozilla.org/show_bug.cgi?id=649285
-	// MathML - https://bugzilla.mozilla.org/show_bug.cgi?id=491668
+	// svg - http://bugzilla.mozilla.org/show_bug.cgi?id=649285
+	// MathML - http://bugzilla.mozilla.org/show_bug.cgi?id=491668
 	if ( val <= 0 || val == null ) {
 		// Fall back to computed then uncomputed css if necessary
 		val = curCSS( elem, name, styles );
@@ -10181,7 +10181,7 @@ jQuery.each( { scrollLeft: "pageXOffset", scrollTop: "pageYOffset" }, function( 
 });
 
 // Add the top/left cssHooks using jQuery.fn.position
-// Webkit bug: https://bugs.webkit.org/show_bug.cgi?id=29084
+// Webkit bug: http://bugs.webkit.org/show_bug.cgi?id=29084
 // getComputedStyle returns percent when specified for top/left/bottom/right
 // rather than make the css module depend on the offset module, we just check for it here
 jQuery.each( [ "top", "left" ], function( i, prop ) {
@@ -10213,7 +10213,7 @@ jQuery.each( { Height: "height", Width: "width" }, function( name, type ) {
 				if ( jQuery.isWindow( elem ) ) {
 					// As of 5/8/2012 this will yield incorrect results for Mobile Safari, but there
 					// isn't a whole lot we can do. See pull request at this URL for discussion:
-					// https://github.com/jquery/jquery/pull/764
+					// http://github.com/jquery/jquery/pull/764
 					return elem.document.documentElement[ "client" + name ];
 				}
 
@@ -10263,7 +10263,7 @@ jQuery.fn.andSelf = jQuery.fn.addBack;
 // Note that for maximum portability, libraries that are not jQuery should
 // declare themselves as anonymous modules, and avoid setting a global if an
 // AMD loader is present. jQuery is a special case. For more information, see
-// https://github.com/jrburke/requirejs/wiki/Updating-existing-libraries#wiki-anon
+// http://github.com/jrburke/requirejs/wiki/Updating-existing-libraries#wiki-anon
 
 if ( typeof define === "function" && define.amd ) {
 	define( "jquery", [], function() {
@@ -10294,7 +10294,7 @@ jQuery.noConflict = function( deep ) {
 };
 
 // Expose jQuery and $ identifiers, even in
-// AMD (#7102#comment:10, https://github.com/jquery/jquery/pull/557)
+// AMD (#7102#comment:10, http://github.com/jquery/jquery/pull/557)
 // and CommonJS for browser emulators (#13566)
 if ( typeof noGlobal === strundefined ) {
 	window.jQuery = window.$ = jQuery;

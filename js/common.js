@@ -1,7 +1,7 @@
 $(document).ready(function () {
     $("#dropin-container").next('form').remove();
     var formElement = '<form id="checkout-form">' +
-           '<input type="submit" class="my_order" value="PLACE ORDER">' +
+           '<input type="submit" style="margin-left:30%;" class="btnAddtoCart" value="PLACE ORDER">' +
        '</form>';
     $("#dropin-container").after(formElement);
     localStorage.removeItem("customerNewId1");
@@ -32,7 +32,7 @@ $(document).ready(function () {
             $("#customerLoginForm").show();
         else {
             var formElement = '<form id="checkout-form">' +
-                '<input type="submit" class="my_order" value="PLACE ORDER">' +
+                '<input type="submit" style="margin-left:30%;" class="btnAddtoCart" value="PLACE ORDER">' +
             '</form>';
             $("#dropin-container").after(formElement);
 
@@ -52,7 +52,7 @@ $(document).ready(function () {
         $("#dropin-container").empty();
         $("#dropin-container").next('form').remove();
         var formElement = '<form id="checkout-form">' +
-               '<input type="submit" class="my_order" value="PLACE ORDER">' +
+               '<input type="submit" style="margin-left:30%;" class="btnAddtoCart" value="PLACE ORDER">' +
            '</form>';
         $("#dropin-container").after(formElement);
         $("#personalDetailsInner").show();
@@ -66,6 +66,7 @@ $(document).ready(function () {
     });
 
     $("#buttonLogin").click(function () {
+        debugger;
         $("#customerEmailAddress").removeClass("validation"); // remove it
         $("#customerPassword").removeClass("validation"); // remove it
         if ($("#customerEmailAddress").val() == "" || $("#customerEmailAddress").val() == null) {
@@ -87,7 +88,7 @@ $(document).ready(function () {
                 crossDomain: true,
                 success: function (data) {
                     //localStorage.setItem("storeList", JSON.stringify(data.stores));
-
+                    debugger;
                     if (data.Customer == undefined || data.Customer == null) {
                         message("<h1>Whoops!</h1>Customer not exist.");
                     }
@@ -103,7 +104,7 @@ $(document).ready(function () {
                         $("#returncustomerForm").show();
 
                         var formElement = '<form id="checkout-form">' +
-                           '<input type="submit" class="my_order" value="PLACE ORDER">' +
+                           '<input type="submit" style="margin-left:30%;" class="btnAddtoCart" value="PLACE ORDER">' +
                        '</form>';
                         $("#dropin-container").after(formElement);
 
@@ -119,7 +120,7 @@ $(document).ready(function () {
     });
 
     $(".cart").click(function () {
-        debugger;
+        
         var cartItems = sessionStorage.getItem("cartItems");
         if (cartItems > 0) {
             $("#PickUpTimeSelect").modal("show");
@@ -176,6 +177,10 @@ $(document).ready(function () {
         $('.popup_choose_ur_base').remove();
     });
 
+    $("body").on('click', '.btnPopup', function () {
+        $('.popup_choose_ur_base').remove();
+    });
+
 });
 
 function newCustomerToken() {
@@ -197,7 +202,7 @@ function newCustomerToken() {
                     }
                 },
                 onPaymentMethodReceived: function (nonce) {
-                    debugger;
+                    
                     placeOrder(nonce, 0);
                 }
             });
@@ -230,7 +235,7 @@ function returnCustomerToken() {
                     }
                 },
                 onPaymentMethodReceived: function (nonce) {
-                    debugger;
+                    
                     placeOrder(nonce, 1);
                 }
             });
@@ -296,7 +301,7 @@ function placeOrder(nonce, repeatCustomer) {
                         $("#dropin-container").empty();
                         $("#dropin-container").next('form').remove();
                         var formElement = '<form id="checkout-form">' +
-                               '<input type="submit" class="my_order" value="PLACE ORDER">' +
+                               '<input type="submit" style="margin-left:30%;" class="btnAddtoCart" value="PLACE ORDER">' +
                            '</form>';
                         $("#dropin-container").after(formElement);
                         $("#personalDetailsInner").show();
@@ -372,4 +377,20 @@ function resetCart() {
 function message(msg) {
     var popup_html = "<div class=\"popup_choose_ur_base\"><div class=\"alert_popup\"><div class=\"close-btn\"></div>" + msg + "</div></div>";
     $("body").append(popup_html);
+
+    setTimeout(function () {
+        $('.popup_choose_ur_base').remove();
+    }, 2000);
+}
+
+function changeStore()
+{
+    $(".changeStore").hide();
+    $(".changeStoreSelect").show();
+}
+
+function changeStoreDone()
+{
+    $(".changeStore").show();
+    $(".changeStoreSelect").hide();
 }
