@@ -49,9 +49,10 @@
 	
 }
 
+
 /* TABLET PROTRAIT PART */
 @media screen and (min-width:480px) and (max-width:767px){
-	
+	.productList ul li{ width:50%}
 	/* modal */
 	
 	#MenuSelect .modal-content{
@@ -174,7 +175,7 @@
 		width:100%;
 		margin:0;
 	}
-	
+	.productList ul li{ width:100%}
 }
 
 /* SMART PHONE PROTRAIT PART */
@@ -251,4 +252,24 @@
 		margin:0;
 	}
 	
+}
+@media screen and (max-width:1023px){
+	h1, h2, h3, h4, h5, h6{line-height:18px;}
+.card .detail{ padding:7px; min-height:52px;}
+.productList ul li {
+       
+        padding: 0 10px 10px;
+    }
+	.productList {
+    padding: 0 20px;
+}
+.modal-content-before{ position:relative; width:100%;}
+#MenuSelect .modal-content{ padding:0 ;}
+}
+@media screen and (max-width:767px){
+	.productList{ padding:0 10px;}
+.productList ul li{ width:50%}
+}
+@media screen and (max-width:479px){
+.productList ul li{ width:100%}
 }

@@ -11,79 +11,8 @@ var apiURL = "https://order.thr1ve.me/api/";
 //var apiURL = "http://localhost:53095/api/";
 
 $(document).ready(function () {
+    //initMap();
     InitLocalStorage();
-
-    getCart();
-    // Populate the store dropdown from the API
-
-
-    $.ajax({
-        url: apiURL + "GetStores",
-        type: "GET",
-        dataType: "json",
-        crossDomain: true,
-        success: function (data) {
-            $(".selectStore").empty();
-            $(".selectStore").append($("<option>", { selected: true, value: "0", text: "Please Select" }));
-            initializeMapMarkers(null, "1");
-            localStorage.setItem("storeList", JSON.stringify(data.stores));
-            $.each(data.stores, function () {
-                $(".selectStore").append($("<option>", { value: this["StoreId"], text: this["StoreName"] }));
-                var _Latitude = this["Latitude"];
-                var _Longitude = this["Longitude"];
-                if (_Latitude != null && _Longitude != null) {
-                    var pos = {
-                        lat: _Latitude,
-                        lng: _Longitude
-                    };
-
-                    initializeMapMarkers(pos, "2", this["StoreName"], this["Image"], this["PhoneNumber"], this["OpenTimeText"], this["StoreId"]);
-
-                    //displayMarkers(pos);
-                }
-
-            });
-            selectStore();
-        },
-        error: function (jqXHR, textStatus, errorThrown) {
-            message("<h1>Whoops!</h1>Something went wrong, please try again later.");
-        }
-    });
-
-
-
-    // Populate the categories tabs from the API
-
-    $.ajax({
-        url: apiURL + "GetCollections",
-        type: "GET",
-        dataType: "json",
-        crossDomain: true,
-        success: function (colelctionsResponse) {
-            //var productionCollection = JSON.parse(localStorage.getItem("productCollection"));
-            //if (productionCollection != null && productionCollection.length > 0)
-            //{ bindProducts(colelctionsResponse); } else {
-            localStorage.setItem("colelctionsResponse", JSON.stringify(colelctionsResponse));
-            $.ajax({
-                url: apiURL + "GetProducts",
-                type: "POST",
-                dataType: "json",
-                data: "collectionId=" + null,
-                crossDomain: true,
-                success: function (productsResponse) {
-                    localStorage.setItem("productCollection", JSON.stringify(productsResponse.products));
-                    bindProducts(colelctionsResponse);
-                },
-                error: function (jqXHR, textStatus, errorThrown) {
-                    message("<h1>Whoops!</h1>Something went wrong, please try again later.");
-                }
-            });
-            //}
-        },
-        error: function (jqXHR, textStatus, errorThrown) {
-            message("<h1>Whoops!</h1>Something went wrong, please try again later.");
-        }
-    });
 
     $("#menupage").on("pagebeforeshow", function (event, data) {
         // Check that there is a valid session
@@ -141,13 +70,15 @@ $(document).ready(function () {
 
     $(".selectStore").change(function () {
         getExcludedProducts();
-        $(".selectStore").val(this.value);
 
+        $(".selectStore").val(this.value);
+        getOrderTypes();
         // *** Store selected time, update time dropdown, then attempt to reselect previous time
 
         $(".selectTime").empty();
+
         if ($(".selectStore").val() == "" || $(".selectStore").val() == "0") {
-            $(".selectTime").append($("<option>", { selected: true, value: "0", text: "Select store first" }));
+            $(".selectTime").append($("<option>", { selected: true, value: "0", text: "Please select..." }));
             $("#divJog").hide();
             return;
         }
@@ -157,10 +88,11 @@ $(document).ready(function () {
             url: apiURL + "GetStoreDetails",
             type: "POST",
             dataType: "json",
-            data: "storeId=" + $(".selectStore").val(),
+            data: {
+                StoreId: $(".selectStore").val()
+            },
             crossDomain: true,
             success: function (data) {
-
                 if (isNaN(parseInt(data.storeDetails["OpenTime"], 10)) || isNaN(parseInt(data.storeDetails["CloseTime"], 10))) {
                     $(".selectTime").append($("<option>", { selected: true, value: "0", text: "Store Closed" }));
                     return;
@@ -198,14 +130,16 @@ $(document).ready(function () {
                     timeSlot.setMinutes(timeSlot.getMinutes() + 5);
                 }
 
-                if ($(".selectTime").size() == 0) $(".selectTime").append($("<option>", { selected: true, value: "0", text: "Store Closed" }));
+                if ($('select.selectTime option').length == 0) $(".selectTime").append($("<option>", { selected: true, value: "0", text: "Store Closed" }));
+                if ($("body").hasClass("loading")) $("body").removeClass("loading"); // Hide spinning wheel when ajax query is finished
 
                 $(".currentSelectedStore").text($("#checkoutSelectStore :selected").text());
                 $(".currentSelectedTime").text($("#checkoutSelectStoreTime").val());
+                checkCollectionTime();
             },
             error: function (jqXHR, textStatus, errorThrown) {
                 message("<h1>Whoops!</h1>Something went wrong, please try again later.");
-
+                if ($("body").hasClass("loading")) $("body").removeClass("loading"); // Hide spinning wheel when ajax query is finished
             }
         });
 
@@ -219,12 +153,103 @@ $(document).ready(function () {
         // *** Update session
         $(".currentSelectedStore").text($("#checkoutSelectStore :selected").text());
         $(".currentSelectedTime").text($("#checkoutSelectStoreTime").val());
+
+        checkCollectionTime();
     });
 
-    $(".currentSelectedStore").text("Please Select Store");
-    $(".currentSelectedTime").text("Select Store First");
-
+    $(".currentSelectedStore").text("Please Select...");
+    $(".currentSelectedTime").text("Please Select...");
+    getExcludedProducts();
+    getOrderTypes();
 });
+
+function createSession() {
+    var postData = {
+        AppType: "web",
+        AppVersion: "",
+        UserAgent: getUserAgent(),
+        CustomField: ""
+    }
+    $.ajax({
+        url: apiURL + "session",
+        type: "POST",
+        dataType: "json",
+        data: postData,
+        crossDomain: true,
+        success: function (data) {
+            localStorage.setItem("userBrowserKey", data.SessionId);
+            getCart(false);
+            $.ajax({
+                url: apiURL + "GetStores",
+                type: "GET",
+                dataType: "json",
+                crossDomain: true,
+                success: function (data) {
+                    $(".selectStore").empty();
+                    $(".selectStore").append($("<option>", { selected: true, value: "0", text: "Please Select..." }));
+                    initializeMapMarkers(null, "1");
+                    localStorage.setItem("storeList", JSON.stringify(data.stores));
+                    $.each(data.stores, function () {
+                        $(".selectStore").append($("<option>", { value: this["StoreId"], text: this["StoreName"] }));
+                        var _Latitude = this["Latitude"];
+                        var _Longitude = this["Longitude"];
+                        if (_Latitude != null && _Longitude != null) {
+                            var pos = {
+                                lat: _Latitude,
+                                lng: _Longitude
+                            };
+                            initializeMapMarkers(pos, "2", this["StoreName"], this["Image"], this["PhoneNumber"], this["OpenTimeText"], this["StoreId"]);
+                            //displayMarkers(pos);
+                        }
+                    });
+                    selectStore();
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    message("<h1>Whoops!</h1>Something went wrong, please try again later.");
+                }
+            });
+
+            // Populate the categories tabs from the API
+            $.ajax({
+                url: apiURL + "GetCollections",
+                type: "GET",
+                dataType: "json",
+                crossDomain: true,
+                success: function (colelctionsResponse) {
+                    //var productionCollection = JSON.parse(localStorage.getItem("productCollection"));
+                    //if (productionCollection != null && productionCollection.length > 0)
+                    //{ bindProducts(colelctionsResponse); } else {
+                    localStorage.setItem("colelctionsResponse", JSON.stringify(colelctionsResponse));
+                    $.ajax({
+                        url: apiURL + "GetProducts",
+                        type: "POST",
+                        dataType: "json",
+                        data: "collectionId=" + null,
+                        crossDomain: true,
+                        success: function (productsResponse) {
+                            localStorage.setItem("productCollection", JSON.stringify(productsResponse.products));
+                            bindProducts(colelctionsResponse);
+                        },
+                        error: function (jqXHR, textStatus, errorThrown) {
+                            message("<h1>Whoops!</h1>Something went wrong, please try again later.");
+                        }
+                    });
+                    //}
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    message("<h1>Whoops!</h1>Something went wrong, please try again later.");
+                }
+            });
+        },
+        error: function (jqXHR, textStatus, errorThrown) {
+            message("<h1>Whoops!</h1>Something went wrong, Session could not be start. please try again later.");
+        }
+    });
+}
+
+function getUserAgent() {
+    return navigator.userAgent;
+}
 
 function getExcludedProducts() {
     $.ajax({
@@ -256,7 +281,7 @@ function bindProducts(colelctionsResponse) {
         var products = productionCollection.filter(function (obj) {
             return obj.collectionId === collectionId;
         });
-        if (products.length > 0) {
+        if (products != null && products.length > 0) {
             if (firstcollectionId == null)
                 firstcollectionId = collectionId;
             if (localStorage.getItem("excludedProductCollection") != null) {
@@ -283,20 +308,20 @@ function bindProducts(colelctionsResponse) {
 
                 if (addProduct) {
                     var tag1Image = "";
-                    var img2 = "";
-                    var img3 = "";
+                    //var img2 = "";
+                    //var img3 = "";
 
                     var barcode = this.barCode;
                     var barCodeAllergens = "";
 
                     if (barcode != null && barcode != "") {
-                        debugger;
+
                         if (barcode.indexOf("allergens") >= 0) {
                             barCodeAllergens = barcode.substring(barcode.indexOf("allergens"));
                             barCodeAllergens = barCodeAllergens.split(':')[1].split(',');
                         }
-                        //if (barcode.indexOf("tag1") >= 0)
-                        //    tag1Image = "images/tag1.png";
+                        if (barcode.indexOf("tag1") >= 0)
+                            tag1Image = "images/tag1.png";
                         //if (barcode.indexOf("img2") >= 0)
                         //    img2 = "images/img2.png";
                         //if (barcode.indexOf("img3") >= 0)
@@ -305,6 +330,9 @@ function bindProducts(colelctionsResponse) {
                     var _price = "";
                     if (this["price"] > 0)
                         _price = "$" + this["price"];
+
+                    if (this.variants.length > 0)
+                        _price = "";
 
                     if (this["title"].indexOf("#") < 0) {
                         var productImg = processImage(this["image"]);
@@ -333,7 +361,7 @@ function bindProducts(colelctionsResponse) {
                         newParent = newParent + '<h3><a>' + this["title"] + '</a></h3>';
                         newParent = newParent + '<h4>' + _price + '</h4>';
                         newParent = newParent + '<ul class="feature">';
-                        debugger;
+
                         for (var im = 0; im < barCodeAllergens.length; im++) {
                             newParent = newParent + '<li><img src="images/' + barCodeAllergens[im].toString().trim() + '"></li>';
                         }
@@ -353,6 +381,7 @@ function bindProducts(colelctionsResponse) {
                 }
             });
 
+            checkCollectionTime();
             newParent = newParent + '</div>';
             newParent = newParent + '</div>';
             newParent = newParent + '</div>';
@@ -365,6 +394,36 @@ function bindProducts(colelctionsResponse) {
         showProductTab(firstcollectionId);
     $(".matchHeight").matchHeight();
     if ($("body").hasClass("loading")) $("body").removeClass("loading"); // Hide spinning wheel when ajax query is finished
+}
+
+function checkCollectionTime() {
+    var colelctionsResponse = JSON.parse(localStorage.getItem("colelctionsResponse"));
+    var selectedTime = $(".selectTime").val();
+
+    //if (selectedTime == "ASAP") {
+    //    var secondTime = $(".selectTime option:eq(1)").val();
+    //    if (secondTime != null) {
+    //        secondTime = secondTime.toString().replace(":", "");
+    //        selectedTime = secondTime - 5;
+    //    }
+    //}
+
+    if (selectedTime == "ASAP") {
+        var selectedTime = $(".selectTime option:eq(1)").val();
+    }
+
+    if (selectedTime != null && selectedTime != 0) {
+        selectedTime = selectedTime.toString().replace(":", "");
+        $.each(colelctionsResponse.collections, function () {
+
+            var displayFrom = this["displayFrom"];
+            var displayTo = this["displayTo"];
+            if (selectedTime >= displayFrom && selectedTime <= displayTo)
+                $("#li" + this["id"]).show();
+            else
+                $("#li" + this["id"]).hide();
+        });
+    }
 }
 
 function showProductTab(collectionId) {
@@ -396,67 +455,12 @@ function selectStore() {
         $(".selectTime").empty();
 
         if ($(".selectStore").val() == "" || $(".selectStore").val() == "0") {
-            $(".selectTime").append($("<option>", { selected: true, value: "0", text: "Select store first" }));
+            $(".selectTime").append($("<option>", { selected: true, value: "0", text: "Please Select..." }));
             $("#divJog").hide();
             return;
         }
 
-        // Populate the time dropdown from the API
-        $.ajax({
-            url: apiURL + "GetStoreDetails",
-            type: "POST",
-            dataType: "json",
-            data: "storeId=" + $(".selectStore").val(),
-            crossDomain: true,
-            success: function (data) {
-
-                if (isNaN(parseInt(data.storeDetails["OpenTime"], 10)) || isNaN(parseInt(data.storeDetails["CloseTime"], 10))) {
-                    $(".selectTime").append($("<option>", { selected: true, value: "0", text: "Store Closed" }));
-                    return;
-                }
-
-                var openTime = new Date();
-                openTime.setHours(data.storeDetails["OpenTime"].substr(0, 2), data.storeDetails["OpenTime"].substr(2, 2), 0, 0); // Set the opening time
-
-                var closeTime = new Date();
-                closeTime.setHours(data.storeDetails["CloseTime"].substr(0, 2), data.storeDetails["CloseTime"].substr(2, 2), 0, 0); // Set the closing time
-
-                var currentTime = new Date(); // Get the current time
-                var roundedCurrentTime = new Date(Math.ceil(currentTime.getTime() / 300000) * 300000); // Round current time up to the nearest 5 minutes
-
-                var timeSlot = new Date(Math.max(openTime, roundedCurrentTime)); // Set the first timeslot based on the opening time or current time, whichever is higher
-
-                // Create an array of times between opening/current and closing hours
-                while (timeSlot < closeTime) {
-                    var time24 = ("0" + timeSlot.getHours()).substr(-2);// + ":" + ("0" + timeSlot.getMinutes()).substr(-2);
-                    if (time24 == "00")
-                        time24 = "12" + ":" + ("0" + timeSlot.getMinutes()).substr(-2);
-                    else
-                        time24 = time24 + ":" + ("0" + timeSlot.getMinutes()).substr(-2);
-
-                    var time12 = ("0" + (timeSlot.getHours() > 11 ? timeSlot.getHours() - 12 : timeSlot.getHours())).substr(-2);// + ":" + ("0" + timeSlot.getMinutes()).substr(-2) + (timeSlot.getHours() > 11 ? " PM" : " AM");
-                    if (time12 == "00")
-                        time12 = "12" + ":" + ("0" + timeSlot.getMinutes()).substr(-2) + (timeSlot.getHours() > 11 ? " PM" : " AM");
-                    else
-                        time12 = time12 + ":" + ("0" + timeSlot.getMinutes()).substr(-2) + (timeSlot.getHours() > 11 ? " PM" : " AM");
-
-                    if (timeSlot.getTime() === roundedCurrentTime.getTime()) {
-                        time24 = time12 = "ASAP"; // If the timeslot matches the rounded current time, rename it to ASAP
-                    }
-                    $(".selectTime").append($("<option>", { value: time24, text: time12 }));
-                    timeSlot.setMinutes(timeSlot.getMinutes() + 5);
-                }
-
-                if ($(".selectTime").size() == 0) $(".selectTime").append($("<option>", { selected: true, value: "0", text: "Store Closed" }));
-
-                $(".currentSelectedStore").text($("#checkoutSelectStore :selected").text());
-                $(".currentSelectedTime").text($("#checkoutSelectStoreTime").val());
-            },
-            error: function (jqXHR, textStatus, errorThrown) {
-                message("<h1>Whoops!</h1>Something went wrong, please try again later.");
-            }
-        });
-        window.location.href = "#menupage";
+        getStoreDetails("menupage");
     }
 }
 
@@ -466,16 +470,25 @@ function getCart() {
         url: apiURL + "GetCart",
         type: "POST",
         dataType: "json",
-        data: "sessionValue=" + localStorage.getItem("userBrowserKey"),
+        data: {
+            sessionValue: localStorage.getItem("userBrowserKey")
+        },
         crossDomain: true,
         success: function (data) {
             $(".table1").empty();
             var _total = 0;
             $.each(data.cart, function () {
+                var extraItems = "";
+                if (this.ExtraName != null && this.ExtraName != "")
+                    extraItems = this.ExtraName;
+                else if (this.VariantTitle != null && this.VariantTitle != "")
+                    extraItems = this.VariantTitle;
+
                 _total = _total + (parseFloat(this.price) + parseFloat(this.ExtraPrice));
                 $(".table1").append("<tr>" +
                       "<td align=\"left\" valign=\"middle\">" + this.qty + "</td>" +
-                      "<td align=\"left\" valign=\"middle\">" + this.title + "</td>" +
+                      "<td align=\"left\" valign=\"middle\" style=\"word-break:break-all;\">" + this.title + "<br><span class='cartSubText'>" + extraItems + "</span></td>" +
+                      //"<td align=\"left\" valign=\"middle\">" + this.title + "</td>" +
                       "<td align=\"left\" valign=\"middle\">$" + (parseFloat(this.price) + parseFloat(this.ExtraPrice)) + "</td>" +
                       "<td align=\"left\" valign=\"middle\"><a onclick='removeCartItem(" + this.Id + ")' href=\"#\" class=\"remove_item\">(remove)</a></td>" +
                   "</tr>");
@@ -499,24 +512,66 @@ function getCart() {
     });
 }
 
-function InitLocalStorage() {
-    // Clear the stored productCollection object and prepare a new array
-    var a = [];
-    a.push(JSON.parse(localStorage.getItem('productCollection')));
-    localStorage.setItem('productCollection', JSON.stringify(a));
+function getOrderTypes() {
+    $.ajax({
+        url: apiURL + "GetOrderType",
+        type: "post",
+        data: {
+            StoreId: $(".selectStore").val()
+        },
+        dataType: "json",
+        crossDomain: true,
+        success: function (data) {
+            $("#orderType").empty();
+            var count = 0;
+            $.each(data, function () {
+                var checked = false;
+                if (count == 0)
+                    checked = true;
+                if (this.Status != "False") {
+                    if (checked) {
+                        $("#orderType").append('<div class="col-lg-6 col-md-6 col-sm-6 col-xs-12"><div class="form-row">' +
+                                '<input type="radio" id=' + this.OrderTypeEnum + ' name="radio-1-set" value=' + this.OrderTypeEnum + ' class="regular-radio" checked />' +
+                                '<label  for=' + this.OrderTypeEnum + '>' + this.OrderType + '</label>' +
+                            '</div></div>');
+                    }
+                    else {
+                        $("#orderType").append('<div class="col-lg-6 col-md-6 col-sm-6 col-xs-12"><div class="form-row">' +
+                                '<input type="radio" id=' + this.OrderTypeEnum + ' name="radio-1-set" value=' + this.OrderTypeEnum + ' class="regular-radio" />' +
+                                '<label for=' + this.OrderTypeEnum + '>' + this.OrderType + '</label>' +
+                            '</div></div>');
+                    }
+                }
+                else {
+                    $("#orderType").append('<div class="col-lg-6 col-md-6 col-sm-6 col-xs-12"><div class="form-row">' +
+                        '<input disabled="disabled" type="radio" id=' + this.OrderTypeEnum + ' name="radio-1-set" value=' + this.OrderTypeEnum + ' class="regular-radio" />' +
+                        '<label for=' + this.OrderTypeEnum + '>' + this.OrderType + '</label>' +
+                    '</div></div>');
+                }
+                count = count + 1;
+            });
 
-    // Create a new sessionId
-    localStorage.setItem("userBrowserKey", getSessionId())
+            //if (count < 2)
+            //    $("#orderType").hide();
+            //else
+            //    $("#orderType").show();
+        },
+        error: function (jqXHR, textStatus, errorThrown) {
+            message("<h1>Whoops!</h1>Something went wrong, please try again later.");
+        }
+    });
 }
 
-function getSessionId() {
-    var text = "";
-    var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+function InitLocalStorage() {
+    // Clear the stored productCollection object and prepare a new array
+    //var a = [];
+    //a.push(JSON.parse(localStorage.getItem('productCollection')));
+    //localStorage.setItem('productCollection', JSON.stringify(a));
 
-    for (var i = 0; i < 8; i++)
-        text += possible.charAt(Math.floor(Math.random() * possible.length));
+    // Create a new sessionId
+    //localStorage.setItem("userBrowserKey", getSessionId())
 
-    return text;
+    createSession();
 }
 
 function SaveDataToLocalStorage(data) {
@@ -531,132 +586,150 @@ function SaveDataToLocalStorage(data) {
 }
 
 function loadproduct(productId) {
-    $("#divAddtocart").empty();
-    $("#divAddtocart").append('<a class="btn" href="#" onclick="addtocart()">Add To Order</a>');
-    $("#divAddtocart").append('<h5>Any extras?</h5>');
-    $("#productFeatureModal").empty();
-    localStorage.removeItem("steptext");
-
-    var data = [];
-    // Parse the serialized data back into an array of objects
-    data = JSON.parse(localStorage.getItem('productCollection'));
-    var result = data.filter(function (obj) { return obj.productId == productId; });
-    var img2 = "";
-    var img3 = "";
-    var barcode = result[0].barCode;
-    var barCodeAllergens = "";
-    if (barcode != null && barcode != "") {
-        if (barcode.indexOf("allergens") >= 0) {
-            barCodeAllergens = barcode.substring(barcode.indexOf("allergens"));
-            barCodeAllergens = barCodeAllergens.split(':')[1].split(',');
+    if ($(".selectStore").val() == '' || $(".selectStore").val() == '0') {
+        debugger;
+        $(".selectStore").addClass("validation");
+        setTimeout(function () {
+            $('.selectStore').removeClass("validation");
+        }, 4000);
+    }
+    else if ($(".selectTime").val() == '' || $(".selectTime").val() == '0') {
+        message("<h1>Whoops!</h1>This store is closed for the day. Please choose another store or come back tomorrow.");
+    }
+    else {
+        $("#divAddtocart").empty();
+        $("#divAddtocartButton").empty();
+        
+        $("#productFeatureModal").empty();
+        localStorage.removeItem("steptext");
+        debugger;
+        var data = [];
+        // Parse the serialized data back into an array of objects
+        data = JSON.parse(localStorage.getItem('productCollection'));
+        var result = data.filter(function (obj) { return obj.productId == productId; });
+        //var img2 = "";
+        //var img3 = "";
+        var barcode = result[0].barCode;
+        var barCodeAllergens = "";
+        if (barcode != null && barcode != "") {
+            if (barcode.indexOf("allergens") >= 0) {
+                barCodeAllergens = barcode.substring(barcode.indexOf("allergens"));
+                barCodeAllergens = barCodeAllergens.split(':')[1].split(',');
+            }
+            //if (barcode.indexOf("img2") >= 0)
+            //    $("#productFeatureModal").append('<li class="veg visible"></li>');
+            //if (barcode.indexOf("img3") >= 0)
+            //    $("#productFeatureModal").append('<li class="milk visible"></li>');
         }
-        //if (barcode.indexOf("img2") >= 0)
-        //    $("#productFeatureModal").append('<li class="veg visible"></li>');
-        //if (barcode.indexOf("img3") >= 0)
-        //    $("#productFeatureModal").append('<li class="milk visible"></li>');
-    }
 
-    for (var im = 0; im < barCodeAllergens.length; im++) {
-        $("#productFeatureModal").append('<li><img src="images/' + barCodeAllergens[im].toString().trim() + '"></li>');
-    }
+        for (var im = 0; im < barCodeAllergens.length; im++) {
+            $("#productFeatureModal").append('<li><img src="images/' + barCodeAllergens[im].toString().trim() + '"></li>');
+        }
 
-    $("#mainVariantId").val(result[0].variantId);
-    $("#mainProductId").val(result[0].productId);
-    $("#selProductImage").attr("src", processImage(result[0].image));
-    $("#selproductTitle").html(result[0].title + " ");
-    $("#selproductPrice").html("$" + result[0].price);
-    $("#selproductDescription").html(result[0].descriptionHtml);
+        $("#mainVariantId").val(result[0].variantId);
+        $("#mainProductId").val(result[0].productId);
+        $("#selProductImage").attr("src", processImage(result[0].image));
+        $("#selproductTitle").html(result[0].title + " ");
+        $("#selproductPrice").html("$" + result[0].price);
+        $("#selproductDescription").html(result[0].descriptionHtml);
 
-    $("#selproductVTitle").html(result[0].title + " ");
-    $("#selVProductImage").attr("src", processImage(result[0].image));
-    $("#selproductVDescription").html(result[0].descriptionHtml);
+        $("#selproductVTitle").html(result[0].title + " ");
+        $("#selVProductImage").attr("src", processImage(result[0].image));
+        $("#selproductVDescription").html(result[0].descriptionHtml);
 
-    $("#addvarianttoCart").hide();
-    $("#addvariantExtrastoCart").hide();
-    $("#addtoCart").show();
-    $("#variantSteps").empty();
+        $("#addvarianttoCart").hide();
+        $("#addvariantExtrastoCart").hide();
+        $("#addtoCart").show();
+        $("#variantSteps").empty();
 
-    if (result[0].variants == null || result[0].variants.length === 0) {
-        $("#selproductExtras").html("");
-        if (result[0].extras == null || result[0].extras.length === 0) {
+        if (result[0].variants == null || result[0].variants.length === 0) {
             $("#selproductExtras").html("");
-        } else {
-            $("#addvarianttoCart").hide();
-            $("#addvariantExtrastoCart").hide();
-            $("#addtoCart").show();
-
-
-            var vId = result[0].variantId;
-            var resultExtras = null;
-            if (vId != null && vId != undefined) {
-                resultExtras = data.filter(function (obj) { return obj.variantId == vId; });
-            }
-            if (resultExtras != null && resultExtras.length > 0 && resultExtras[0].extras[0].title.indexOf("#") >= 0) {
-                loadExtrasExtra(result);
-                $("#addvariantExtrastoCart").show();
+            if (result[0].extras == null || result[0].extras.length === 0) {
+                $("#selproductExtras").html("");
+            } else {
                 $("#addvarianttoCart").hide();
-                $("#addtoCart").hide();
-            }
-            else {
-                $.each(result[0].extras, function () {
-                    var _extraprice = "";
-                    if (this["price"] > 0)
-                        _extraprice = "$" + this["price"];
+                $("#addvariantExtrastoCart").hide();
+                $("#addtoCart").show();
 
-                    var newElement = $('<tr></tr>');
-                    $("#selproductExtras").append(newElement);
-                    var productImg = processImage(this["image"]);
-                    newElement.append('<td>' + this["title"] + '</td>');
-                    newElement.append('<td>' + _extraprice + '</td>');
-                    newElement.append('<td><a id="' + this["variantId"] + '" class="btn" href="#">Add</a></td>');
-                    //newElement.append('<li><div class="add_img"><img src="' + productImg + '"></div><div class="add_price clearfix"><h2>' + this["title"] + '</h2><span> $' + this["price"] + '</span></div><div class="added_overlay" id="' + this["variantId"] + '"><span>ADDED!</span></div></li>');
+
+                var vId = result[0].variantId;
+                var resultExtras = null;
+                if (vId != null && vId != undefined) {
+                    resultExtras = data.filter(function (obj) { return obj.variantId == vId; });
+                }
+                if (resultExtras != null && resultExtras.length > 0 && resultExtras[0].extras[0].title.indexOf("#") >= 0) {
+                    loadExtrasExtra(result);
+                    $("#addvariantExtrastoCart").show();
+                    $("#addvarianttoCart").hide();
+                    $("#addtoCart").hide();
+                }
+                else {
+                    $("#divAddtocart").append('<h5>Any extras?</h5>');
+                    $.each(result[0].extras, function () {
+                        var _extraprice = "";
+                        if (this["price"] > 0)
+                            _extraprice = "$" + this["price"];
+
+                        var newElement = $('<tr></tr>');
+                        $("#selproductExtras").append(newElement);
+                        var productImg = processImage(this["image"]);
+                        newElement.append('<td>' + this["title"] + '</td>');
+                        newElement.append('<td>' + _extraprice + '</td>');
+                        newElement.append('<td><a id="' + this["variantId"] + '" class="btn" href="#">Add</a></td>');
+                        //newElement.append('<li><div class="add_img"><img src="' + productImg + '"></div><div class="add_price clearfix"><h2>' + this["title"] + '</h2><span> $' + this["price"] + '</span></div><div class="added_overlay" id="' + this["variantId"] + '"><span>ADDED!</span></div></li>');
+                    });
+                }
+            }
+            $("#divAddtocartButton").append('<a class="btn" href="#" onclick="addtocart()">Add To Order</a>');
+        } else {
+            localStorage.setItem("variantExtras", JSON.stringify(result[0].extras));
+
+            var _variants = result[0].variants;
+            localStorage.setItem("variantSteps", _variants.length);
+            for (v = 0; v < _variants.length; v++) {
+                $("#variantSteps").append("<h2>" + _variants[v].title + "</h2>");
+                var newElement = $('<div class="productList"></div>');
+                $("#variantSteps").append(newElement);
+
+                var innerElements = "<ul class='add_item'>"
+                var _variantsArray = _variants[v].values.split(',');
+                var _variantsImageArray = "";
+                if (_variants[v].image != null && _variants[v].image != "")
+                    _variantsImageArray = _variants[v].image.split(',');
+
+                for (i = 0; i < _variantsArray.length; i++) {
+
+                    if (_variantsImageArray != "" && _variantsImageArray[i] != undefined)
+                        innerElements = innerElements + '<li><div class="card"><div class="prodImg"></div><img src="' + _variantsImageArray[i].replace('[', '').replace(']', '') + '" alt=""><div class="detail"><h3>' + _variantsArray[i].replace('[', '').replace(']', '') + '</h3><span></span>' +
+                                                        '</div></div></li>';
+                    else
+                        innerElements = innerElements + '<li><div class="card"><div class="prodImg"><img src="" alt=""></div><div class="detail"><h3>' + _variantsArray[i].replace('[', '').replace(']', '') + '</h3><span></span>' +
+                                                    '</div></div></li>';
+                }
+                innerElements = innerElements + '</ul>';
+                newElement.append(innerElements);
+                $(".add_item li").click(function () {
+                    $(this).parent("ul").find(".card").removeClass("open_close");
+                    $(this).find(".card").toggleClass("open_close");
+                    debugger;
+                    $(this).parent("ul").find(".prodImg").removeClass("open_close_img");
+                    $(this).find(".prodImg").toggleClass("open_close_img");
                 });
             }
-        }
-    } else {
-        localStorage.setItem("variantExtras", JSON.stringify(result[0].extras));
+            $("#addvarianttoCart").show();
 
-        var _variants = result[0].variants;
-        localStorage.setItem("variantSteps", _variants.length);
-        for (v = 0; v < _variants.length; v++) {
-            $("#variantSteps").append("<h2>" + _variants[v].title + "</h2>");
-            var newElement = $('<div class="productList"></div>');
-            $("#variantSteps").append(newElement);
-
-            var innerElements = "<ul class='add_item'>"
-            var _variantsArray = _variants[v].values.split(',');
-            var _variantsImageArray = "";
-            if (_variants[v].image != null && _variants[v].image != "")
-                _variantsImageArray = _variants[v].image.split(',');
-
-            for (i = 0; i < _variantsArray.length; i++) {
-
-                if (_variantsImageArray != "" && _variantsImageArray[i] != undefined)
-                    innerElements = innerElements + '<li><div class="card"><div class="prodImg"><img src="' + _variantsImageArray[i].replace('[', '').replace(']', '') + '" alt=""></div><div class="detail"><h3>' + _variantsArray[i].replace('[', '').replace(']', '') + '</h3><span></span>' +
-                                                    '</div></div></li>';
-                else
-                    innerElements = innerElements + '<li><div class="card"><div class="prodImg"><img src="" alt=""></div><div class="detail"><h3>' + _variantsArray[i].replace('[', '').replace(']', '') + '</h3><span></span>' +
-                                                '</div></div></li>';
-            }
-            innerElements = innerElements + '</ul>';
-            newElement.append(innerElements);
             $(".add_item li").click(function () {
-                $(this).parent("ul").find(".card").removeClass("open_close");
-                $(this).find(".card").toggleClass("open_close");
+                debugger;
+                $(this).find(".added_overlay").toggleClass("open_close");
             });
         }
-        $("#addvarianttoCart").show();
-
-        $(".add_item li").click(function () {
-            $(this).find(".added_overlay").toggleClass("open_close");
+        $('.btn').click(function (e) {
+            e.preventDefault();
+            $(this).text('ADDED!').addClass('active');
+            //$(this).parent().parent().find('.anyExtra').show();
         });
+        
     }
-    $('.btn').click(function (e) {
-        e.preventDefault();
-        $(this).text('ADDED!').addClass('active');
-        //$(this).parent().parent().find('.anyExtra').show();
-    });
-
 }
 
 function loadExtrasExtra(result) {
@@ -686,7 +759,7 @@ function loadExtrasExtra(result) {
                         _rextraprice = "$" + resultExtras[ve].price;
 
                     var productImg = processImage(resultExtras[ve].image);
-                    innerElements = innerElements + '<li><div class="card" id="' + resultExtras[ve].variantId + '"><div class="prodImg"><img src="' + productImg + '" alt=""></div><div class="detail"><h3>' + resultExtras[ve].title + '<span>' + _rextraprice + '</span></h3>' +
+                    innerElements = innerElements + '<li><div class="card" id="' + resultExtras[ve].variantId + '"><div class="prodImg"></div><img src="' + productImg + '" alt=""><div class="detail"><h3>' + resultExtras[ve].title + '<span>' + _rextraprice + '</span></h3>' +
                                     //'<div class="iconBar"><a href="#"><img src="images/img3.png" alt=""></a> <a href="#"><img src="images/img2.png" alt=""></a></div>' +
                                     //'<div class="description">' + resultExtras[ve].descriptionHtml + '</div>' +
                                     '</div></div></li>';
@@ -699,7 +772,9 @@ function loadExtrasExtra(result) {
     }
     $(".add_item li").click(function () {
         $(this).find(".card").toggleClass("open_close");
+        $(this).find(".prodImg").toggleClass("open_close_img");
     });
+    
 }
 
 function processImage(img) {
@@ -711,6 +786,7 @@ function processImage(img) {
 }
 
 function addvariantExtrastocart() {
+    alert("A");
     var extras = [];
     var variantSteps = localStorage.getItem("variantSteps");
     $.each($('.card.open_close'), function () {
@@ -734,10 +810,19 @@ function addvariantExtrastocart() {
             data: postData,
             crossDomain: true,
             success: function (data) {
-                getCart();
-                window.location.href = "#menupage";
-                message('<img src="images/Untitled-1.png"/><h1>Boom</h1>Added to your order!');
-                $(".close").click();
+                debugger;
+                if (!data.isSuccess && data.errorMessage.indexOf("BasketOverLimit") >= 0) {
+                    var maxOrderAmount = data.errorMessage.substring(data.errorMessage.indexOf("#") + 1);
+                    window.location.href = "#menupage";
+                    messageReqButtonClick("<h1>WE'RE SORRY</h1>Due to high demand at the moment we are accepting orders up to $" + maxOrderAmount + " only. If you have a larger order, please contact the store directly. Thank you!  <br> <button type='button' class='btnPopup'>OK, GOT IT!</button>");
+                    $(".close").click();
+                }
+                else {
+                    getCart();
+                    window.location.href = "#menupage";
+                    message('<img src="images/Untitled-1.png"/><h1>Boom</h1>Added to your order!');
+                    $(".close").click();
+                }
             },
             error: function (jqXHR, textStatus, errorThrown) {
                 message("<h1>Whoops!</h1>Something went wrong, please try again later.");
@@ -768,6 +853,8 @@ function addvarianttocart() {
             crossDomain: true,
             success: function (data) {
                 var postData = {
+                    storeId: $(".selectStore").val(),
+                    time: $(".selectTime").val(),
                     sessionValue: localStorage.getItem("userBrowserKey"),
                     variantId: data.VariantId,
                     qty: "1",
@@ -784,10 +871,18 @@ function addvarianttocart() {
                         data: postData,
                         crossDomain: true,
                         success: function (data) {
-                            getCart();
-                            window.location.href = "#menupage";
-                            message('<img src="images/Untitled-1.png"/><h1>Boom</h1>Added to your order!');
-                            $(".close").click();
+                            if (!data.isSuccess && data.errorMessage.indexOf("BasketOverLimit") >= 0) {
+                                var maxOrderAmount = data.errorMessage.substring(data.errorMessage.indexOf("#") + 1);
+                                window.location.href = "#menupage";
+                                messageReqButtonClick("<h1>WE'RE SORRY</h1>Due to high demand at the moment we are accepting orders up to $" + maxOrderAmount + " only. If you have a larger order, please contact the store directly. Thank you!  <br> <button type='button' class='btnPopup'>OK, GOT IT!</button>");
+                                $(".close").click();
+                            }
+                            else {
+                                getCart();
+                                window.location.href = "#menupage";
+                                message('<img src="images/Untitled-1.png"/><h1>Boom</h1>Added to your order!');
+                                $(".close").click();
+                            }
                         },
                         error: function (jqXHR, textStatus, errorThrown) {
                             message("<h1>Whoops!</h1>Something went wrong, please try again later.");
@@ -813,6 +908,8 @@ function addtocart() {
         }
     });
     var postData = {
+        storeId: $(".selectStore").val(),
+        time: $(".selectTime").val(),
         sessionValue: localStorage.getItem("userBrowserKey"),
         variantId: $("#mainVariantId").val(),
         qty: "1",
@@ -826,10 +923,18 @@ function addtocart() {
         data: postData,
         crossDomain: true,
         success: function (data) {
-            getCart();
-            window.location.href = "#menupage";
-            message('<img src="images/Untitled-1.png"/><h1>Boom</h1>Added to your order!');
-            $(".close").click();
+            if (!data.isSuccess && data.errorMessage.indexOf("BasketOverLimit") >= 0) {
+                var maxOrderAmount = data.errorMessage.substring(data.errorMessage.indexOf("#") + 1);
+                window.location.href = "#menupage";
+                messageReqButtonClick("<h1>WE'RE SORRY</h1>Due to high demand at the moment we are accepting orders up to $" + maxOrderAmount + " only. If you have a larger order, please contact the store directly. Thank you!  <br> <button type='button' class='btnPopup'>OK, GOT IT!</button>");
+                $(".close").click();
+            }
+            else {
+                getCart();
+                window.location.href = "#menupage";
+                message('<img src="images/Untitled-1.png"/><h1>Boom</h1>Added to your order!');
+                $(".close").click();
+            }
         },
         error: function (jqXHR, textStatus, errorThrown) {
             message("<h1>Whoops!</h1>Something went wrong, please try again later.");
@@ -883,15 +988,15 @@ function initializeMapMarkers(pos, init, storeName, image, phoneNumber, openTime
             if (init == "2") {
                 //var distance = getDistanceFromLatLonInKm(targetpos.lat, targetpos.lng, pos.lat, pos.lng);
                 //if (distance <= 100) {
-                $("#storeLocations").append("<p>" +
-                       "<img src=\"" + image + "\" alt=\"no img\">" +
-                       "<div class=\"locDes\">" +
-                           "<h3>" + storeName + "</h3>" +
-                           "<p>" + phoneNumber + " <br>" + openTimeText + "</p>" +
-                           //"<input onclick='menupage(" + storeId + ",menupage)' type=\"button\" value=\"START ORDER\" class=\"my_order locationOrder\" data-role=\"none\">" +
-                       "</div>");
+                    $("#storeLocations").append("<p>" +
+                           "<img src=\"" + image + "\" alt=\"no img\">" +
+                           "<div class=\"locDes\">" +
+                               "<h3>" + storeName + "</h3>" +
+                               "<p>" + phoneNumber + " <br>" + openTimeText + "</p>" +
+                               "<input onclick='menupage(" + storeId + ",\"menupage\")' type=\"button\" value=\"START ORDER\" class=\"my_order locationOrder\" data-role=\"none\">" +
+                           "</div>");
 
-                displayMarkers(pos);
+                    //displayMarkers(pos);
                 //}
             }
             else {
@@ -911,6 +1016,10 @@ function initMap() {
     map = new google.maps.Map(document.getElementById('map'), {
         center: { lat: -34.397, lng: 150.644 },
         zoom: 10
+    });
+
+    $('body').mouseover(function () {
+        google.maps.event.trigger(map, 'resize');
     });
 }
 
@@ -979,72 +1088,77 @@ function menupage(storeId, pageName) {
         $(".selectTime").empty();
 
         if ($(".selectStore").val() == "" || $(".selectStore").val() == "0") {
-            $(".selectTime").append($("<option>", { selected: true, value: "0", text: "Select store first" }));
+            $(".selectTime").append($("<option>", { selected: true, value: "0", text: "Please select..." }));
             $("#divJog").hide();
             return;
         }
 
-        // Populate the time dropdown from the API
-        $.ajax({
-            url: apiURL + "GetStoreDetails",
-            type: "POST",
-            dataType: "json",
-            data: "storeId=" + $(".selectStore").val(),
-            crossDomain: true,
-            success: function (data) {
-
-                if (isNaN(parseInt(data.storeDetails["OpenTime"], 10)) || isNaN(parseInt(data.storeDetails["CloseTime"], 10))) {
-                    $(".selectTime").append($("<option>", { selected: true, value: "0", text: "Store Closed" }));
-                    return;
-                }
-
-                var openTime = new Date();
-                openTime.setHours(data.storeDetails["OpenTime"].substr(0, 2), data.storeDetails["OpenTime"].substr(2, 2), 0, 0); // Set the opening time
-
-                var closeTime = new Date();
-                closeTime.setHours(data.storeDetails["CloseTime"].substr(0, 2), data.storeDetails["CloseTime"].substr(2, 2), 0, 0); // Set the closing time
-
-                var currentTime = new Date(); // Get the current time
-                var roundedCurrentTime = new Date(Math.ceil(currentTime.getTime() / 300000) * 300000); // Round current time up to the nearest 5 minutes
-
-                var timeSlot = new Date(Math.max(openTime, roundedCurrentTime)); // Set the first timeslot based on the opening time or current time, whichever is higher
-
-                // Create an array of times between opening/current and closing hours
-                while (timeSlot < closeTime) {
-                    var time24 = ("0" + timeSlot.getHours()).substr(-2);// + ":" + ("0" + timeSlot.getMinutes()).substr(-2);
-                    if (time24 == "00")
-                        time24 = "12" + ":" + ("0" + timeSlot.getMinutes()).substr(-2);
-                    else
-                        time24 = time24 + ":" + ("0" + timeSlot.getMinutes()).substr(-2);
-
-                    var time12 = ("0" + (timeSlot.getHours() > 11 ? timeSlot.getHours() - 12 : timeSlot.getHours())).substr(-2);// + ":" + ("0" + timeSlot.getMinutes()).substr(-2) + (timeSlot.getHours() > 11 ? " PM" : " AM");
-                    if (time12 == "00")
-                        time12 = "12" + ":" + ("0" + timeSlot.getMinutes()).substr(-2) + (timeSlot.getHours() > 11 ? " PM" : " AM");
-                    else
-                        time12 = time12 + ":" + ("0" + timeSlot.getMinutes()).substr(-2) + (timeSlot.getHours() > 11 ? " PM" : " AM");
-
-                    if (timeSlot.getTime() === roundedCurrentTime.getTime()) {
-                        time24 = time12 = "ASAP"; // If the timeslot matches the rounded current time, rename it to ASAP
-                    }
-                    $(".selectTime").append($("<option>", { value: time24, text: time12 }));
-                    timeSlot.setMinutes(timeSlot.getMinutes() + 5);
-                }
-
-                if ($(".selectTime").size() == 0) $(".selectTime").append($("<option>", { selected: true, value: "0", text: "Store Closed" }));
-
-                $(".currentSelectedStore").text($("#checkoutSelectStore :selected").text());
-                $(".currentSelectedTime").text($("#checkoutSelectStoreTime").val());
-            },
-            error: function (jqXHR, textStatus, errorThrown) {
-                message("<h1>Whoops!</h1>Something went wrong, please try again later.");
-            }
-        });
-        window.location.href = "#" + pageName;
+        getStoreDetails(pageName);
     }
 }
 
 
+function getStoreDetails(pageName) {
+    // Populate the time dropdown from the API
+    $.ajax({
+        url: apiURL + "GetStoreDetails",
+        type: "POST",
+        dataType: "json",
+        data: {
+            StoreId: $(".selectStore").val()
+        },
+        crossDomain: true,
+        success: function (data) {
 
+            if (isNaN(parseInt(data.storeDetails["OpenTime"], 10)) || isNaN(parseInt(data.storeDetails["CloseTime"], 10))) {
+                $(".selectTime").append($("<option>", { selected: true, value: "0", text: "Store Closed" }));
+                return;
+            }
+
+            var openTime = new Date();
+            openTime.setHours(data.storeDetails["OpenTime"].substr(0, 2), data.storeDetails["OpenTime"].substr(2, 2), 0, 0); // Set the opening time
+
+            var closeTime = new Date();
+            closeTime.setHours(data.storeDetails["CloseTime"].substr(0, 2), data.storeDetails["CloseTime"].substr(2, 2), 0, 0); // Set the closing time
+
+            var currentTime = new Date(); // Get the current time
+            var roundedCurrentTime = new Date(Math.ceil(currentTime.getTime() / 300000) * 300000); // Round current time up to the nearest 5 minutes
+
+            var timeSlot = new Date(Math.max(openTime, roundedCurrentTime)); // Set the first timeslot based on the opening time or current time, whichever is higher
+
+            // Create an array of times between opening/current and closing hours
+            while (timeSlot < closeTime) {
+                var time24 = ("0" + timeSlot.getHours()).substr(-2);// + ":" + ("0" + timeSlot.getMinutes()).substr(-2);
+                if (time24 == "00")
+                    time24 = "12" + ":" + ("0" + timeSlot.getMinutes()).substr(-2);
+                else
+                    time24 = time24 + ":" + ("0" + timeSlot.getMinutes()).substr(-2);
+
+                var time12 = ("0" + (timeSlot.getHours() > 11 ? timeSlot.getHours() - 12 : timeSlot.getHours())).substr(-2);// + ":" + ("0" + timeSlot.getMinutes()).substr(-2) + (timeSlot.getHours() > 11 ? " PM" : " AM");
+                if (time12 == "00")
+                    time12 = "12" + ":" + ("0" + timeSlot.getMinutes()).substr(-2) + (timeSlot.getHours() > 11 ? " PM" : " AM");
+                else
+                    time12 = time12 + ":" + ("0" + timeSlot.getMinutes()).substr(-2) + (timeSlot.getHours() > 11 ? " PM" : " AM");
+
+                if (timeSlot.getTime() === roundedCurrentTime.getTime()) {
+                    time24 = time12 = "ASAP"; // If the timeslot matches the rounded current time, rename it to ASAP
+                }
+                $(".selectTime").append($("<option>", { value: time24, text: time12 }));
+                timeSlot.setMinutes(timeSlot.getMinutes() + 5);
+            }
+
+            if ($(".selectTime").size() == 0) $(".selectTime").append($("<option>", { selected: true, value: "0", text: "Store Closed" }));
+            if ($('select.selectTime option').length == 0) $(".selectTime").append($("<option>", { selected: true, value: "0", text: "Store Closed" }));
+
+            $(".currentSelectedStore").text($("#checkoutSelectStore :selected").text());
+            $(".currentSelectedTime").text($("#checkoutSelectStoreTime").val());
+        },
+        error: function (jqXHR, textStatus, errorThrown) {
+            message("<h1>Whoops!</h1>Something went wrong, please try again later.");
+        }
+    });
+    window.location.href = "#" + pageName;
+}
 
 function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
 
@@ -1109,4 +1223,16 @@ function selectNearestStore(storeId) {
             }
         });
     }
+}
+
+function privacy() {
+    $(".privacyPolicy").show();
+    $(".privacyPolicy").animate({ scrollTop: 0 }, "fast");
+    $(".terms").hide();
+}
+
+function terms() {
+    $(".terms").show();
+    $(".terms").animate({ scrollTop: 0 }, "fast");
+    $(".privacyPolicy").hide();
 }

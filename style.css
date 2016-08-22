@@ -72,10 +72,6 @@ body {
     line-height: 22px;
 }
 
-input, select, textarea {
-    font-family: 'Montserrat', Verdana, Geneva, Tahoma, sans-serif !important;
-}
-
 img {
     width: auto;
     max-width: 100%;
@@ -145,7 +141,7 @@ a:visited {
     position: absolute;
     top: 0;
     left: 0;
-    z-index: 0;
+    z-index: 7;
     content: " ";
     width: 50%;
     height: 100%;
@@ -169,69 +165,30 @@ a:visited {
     position: relative;
     width: 100%;
     height: auto;
-    padding: 15px 15px 0px 25px;
+    padding: 20px 25px 0px 25px;
     border: none;
     border-radius: 0;
 }
 
-.my_order {
-    margin-bottom: 0;
-}
-
-footer {
-    text-align: center;
-    position: relative;
-    width: 100%;
-    padding: 15px 0;
-    z-index: 100;
-    color: #444;
-}
-
-    footer a {
-        display: inline-block;
-        text-decoration: underline;
-        padding: 0 10px;
-        font-size: 12px;
-        border-right: 1px solid #444;
-        color: #444;
+    .modal-header > .close {
+        width: auto;
+        height: auto;
+        float: right;
+        font-weight: 300;
+        font-size: 16px;
+        color: #a0a1a0;
+        line-height: 25px;
+        text-shadow: 0px 0px 0px rgba(0,0,0,0);
+        filter: alpha(opacity=100);
+        opacity: 1;
     }
 
-        footer a:last-child {
-            border: 0;
+        .modal-header > .close span {
+            display: inline-block;
+            vertical-align: top;
+            margin: -2px 0px 0px 5px;
+            font-size: 45px;
         }
-
-.ui-mobile [data-role="page"], .ui-mobile [data-role="dialog"], .ui-page {
-    position: relative;
-}
-
-
-.table1 th, .table1 td {
-    padding: 5px;
-}
-
-.modal-dialog h3 {
-    padding: 0 15px 15px;
-}
-
-.modal-header > .close {
-    width: auto;
-    height: auto;
-    float: right;
-    font-weight: 300;
-    font-size: 16px;
-    color: #a0a1a0;
-    line-height: 25px;
-    text-shadow: 0px 0px 0px rgba(0,0,0,0);
-    filter: alpha(opacity=100);
-    opacity: 1;
-}
-
-    .modal-header > .close span {
-        display: inline-block;
-        vertical-align: top;
-        margin: -2px 0px 0px 5px;
-        font-size: 45px;
-    }
 
 .modal-body {
     width: 100%;
@@ -436,122 +393,118 @@ footer {
         vertical-align: top;
         width: 100%;
         height: auto;
-        /*  margin: 0px 0px 20px 0px;*/
+        margin: 0px 0px 20px 0px;
         font-weight: 300;
         font-size: 36px;
         color: #332f2f;
         line-height: 45px;
     }
 
-.pick-up-time h3 {
-    margin-left: 0;
-}
-
-.location_where_detect h2,
-.location_where_detect h3 {
-    display: inline-block;
-    vertical-align: top;
-    width: 100%;
-    height: auto;
-    margin: 0px 0px 25px 0px;
-    font-weight: 300;
-    font-size: 18px;
-    color: #332f2f;
-    line-height: 25px;
-}
-
-.location_where_detect p {
-    display: inline-block;
-    vertical-align: top;
-    width: 100%;
-    height: auto;
-    margin: 0px 0px 25px 0px;
-    font-weight: 300;
-    font-size: 14px;
-    color: #332f2f;
-    line-height: 22px;
-}
-
-.location_where_detect .location-detect-form {
-    display: inline-block;
-    vertical-align: top;
-    width: 100%;
-    max-width: 390px;
-    height: auto;
-    margin: 5px 0px 35px 0px;
-}
-
-    .location_where_detect .location-detect-form .form-row {
-        position: relative;
+    .location_where_detect h2,
+    .location_where_detect h3 {
+        display: inline-block;
+        vertical-align: top;
         width: 100%;
         height: auto;
-        float: left;
-        margin: 0px 0px 20px 0px;
+        margin: 0px 0px 25px 0px;
+        font-weight: 300;
+        font-size: 18px;
+        color: #332f2f;
+        line-height: 25px;
     }
 
-        .location_where_detect .location-detect-form .form-row:last-child,
-        .location_where_detect .location-detect-form .form-row:only-child {
-            margin: 0;
-        }
+    .location_where_detect p {
+        display: inline-block;
+        vertical-align: top;
+        width: 100%;
+        height: auto;
+        margin: 0px 0px 25px 0px;
+        font-weight: 300;
+        font-size: 14px;
+        color: #332f2f;
+        line-height: 22px;
+    }
 
-        .location_where_detect .location-detect-form .form-row input[type=text],
-        .location_where_detect .location-detect-form .form-row input[type=email],
-        .location_where_detect .location-detect-form .form-row input[type=number] {
-            display: inline-block;
-            vertical-align: top;
+    .location_where_detect .location-detect-form {
+        display: inline-block;
+        vertical-align: top;
+        width: 100%;
+        max-width: 390px;
+        height: auto;
+        margin: 5px 0px 35px 0px;
+    }
+
+        .location_where_detect .location-detect-form .form-row {
+            position: relative;
             width: 100%;
-            height: 56px;
-            padding: 0px 50px 0px 15px;
-            background: #fff;
-            border: none;
-            border-radius: 0;
-            font-family: 'Montserrat', Verdana, Geneva, Tahoma, sans-serif;
-            font-weight: 300;
-            font-size: 18px;
-            color: #332f2f;
-            line-height: 25px;
+            height: auto;
+            float: left;
+            margin: 0px 0px 20px 0px;
         }
 
-        .location_where_detect .location-detect-form .form-row input[type=button] {
-            position: absolute;
-            top: 50%;
-            right: 10px;
-            z-index: 1;
-            width: 28px;
-            height: 28px;
-            margin-top: -14px;
-            background: url(images/background/compas-btn.png) 0px 0px no-repeat;
-            border: none;
-            border-radius: 50%;
-            font-size: 0;
-            cursor: pointer;
-            transition: all 0.3s ease-in-out;
-            -webkit-transition: all 0.3s ease-in-out;
-        }
-
-            .location_where_detect .location-detect-form .form-row input[type=button]:hover {
-                background-position: 0px -28px;
+            .location_where_detect .location-detect-form .form-row:last-child,
+            .location_where_detect .location-detect-form .form-row:only-child {
+                margin: 0;
             }
 
-        .location_where_detect .location-detect-form .form-row input[type=submit] {
-            display: inline-block;
-            vertical-align: top;
-            width: auto;
-            height: auto;
-            padding: 7px 25px 8px 25px;
-            background: #55c34c;
-            border: none;
-            border-radius: 0;
-            text-transform: uppercase;
-            font-family: 'Montserrat', Verdana, Geneva, Tahoma, sans-serif;
-            font-weight: 700;
-            font-size: 16px;
-            color: #fff;
-            line-height: 25px;
-            cursor: pointer;
-            transition: all 0.3s ease-in-out;
-            -webkit-transition: all 0.3s ease-in-out;
-        }
+            .location_where_detect .location-detect-form .form-row input[type=text],
+            .location_where_detect .location-detect-form .form-row input[type=email],
+            .location_where_detect .location-detect-form .form-row input[type=number] {
+                display: inline-block;
+                vertical-align: top;
+                width: 100%;
+                height: 56px;
+                padding: 0px 50px 0px 15px;
+                background: #fff;
+                border: none;
+                border-radius: 0;
+                font-family: 'Montserrat', Verdana, Geneva, Tahoma, sans-serif;
+                font-weight: 300;
+                font-size: 18px;
+                color: #332f2f;
+                line-height: 25px;
+            }
+
+            .location_where_detect .location-detect-form .form-row input[type=button] {
+                position: absolute;
+                top: 50%;
+                right: 10px;
+                z-index: 1;
+                width: 28px;
+                height: 28px;
+                margin-top: -14px;
+                background: url(images/background/compas-btn.png) 0px 0px no-repeat;
+                border: none;
+                border-radius: 50%;
+                font-size: 0;
+                cursor: pointer;
+                transition: all 0.3s ease-in-out;
+                -webkit-transition: all 0.3s ease-in-out;
+            }
+
+                .location_where_detect .location-detect-form .form-row input[type=button]:hover {
+                    background-position: 0px -28px;
+                }
+
+            .location_where_detect .location-detect-form .form-row input[type=submit] {
+                display: inline-block;
+                vertical-align: top;
+                width: auto;
+                height: auto;
+                padding: 7px 25px 8px 25px;
+                background: #55c34c;
+                border: none;
+                border-radius: 0;
+                text-transform: uppercase;
+                font-family: 'Montserrat', Verdana, Geneva, Tahoma, sans-serif;
+                font-weight: 700;
+                font-size: 16px;
+                color: #fff;
+                line-height: 25px;
+                cursor: pointer;
+                transition: all 0.3s ease-in-out;
+                -webkit-transition: all 0.3s ease-in-out;
+            }
 
 /* LOCATION STORE PAGE */
 
@@ -1132,6 +1085,7 @@ footer {
 }
 
 .pick-up-time .btn {
+    min-width: 46%;
     display: inline-block;
     vertical-align: top;
     width: auto;
@@ -1206,6 +1160,7 @@ footer {
     }
 
         .pick-up-time .table > tbody > tr > td .btn {
+            min-width:66%;
             margin: 0;
             padding: 3px 10px 3px 10px;
             font-size: 14px;
@@ -1226,195 +1181,147 @@ footer {
         width: 100%;
         height: auto;
         float: left;
-        margin: 0px 0px 0px 0px;
+        margin: 0px 0px 15px 0px;
         text-align: left;
     }
 
-.ui-checkbox, .ui-radio {
-    margin: 0;
-}
-
-.pick-up-time-form .row {
-    margin-bottom: 15px;
-}
-
-.pick-up-time .pick-up-time-form .form-row.last {
-    margin: 0;
-}
-
-.pick-up-time .pick-up-time-form .form-row.buttom {
-    text-align: center;
-}
-
-.pick-up-time .pick-up-time-form .form-row > *:last-child {
-    margin-bottom: 0 !important;
-}
-
-.pick-up-time .pick-up-time-form .form-row label {
-    display: inline-block;
-    vertical-align: top;
-    width: auto;
-    height: auto;
-    margin: 0px 0px 7px 0px;
-    font-family: 'Montserrat', Verdana, Geneva, Tahoma, sans-serif;
-    font-weight: 700;
-    font-size: 16px;
-    color: #5c5856;
-    line-height: 35px;
-}
-
-    .pick-up-time .pick-up-time-form .form-row label span {
-        display: block;
-        font-weight: 300;
-        font-size: 13px;
-        color: #979797;
-        line-height: 22px;
-    }
-
-.pick-up-time .pick-up-time-form .form-row input[type=text],
-.pick-up-time .pick-up-time-form .form-row input[type=email],
-.pick-up-time .pick-up-time-form .form-row input[type=url],
-.pick-up-time .pick-up-time-form .form-row input[type=tel],
-.pick-up-time .pick-up-time-form .form-row input[type=number],
-.pick-up-time .pick-up-time-form .form-row input[type=password],
-.pick-up-time .pick-up-time-form .form-row input[type=date],
-.pick-up-time .pick-up-time-form .form-row input[type=time],
-.pick-up-time .pick-up-time-form .form-row select,
-.pick-up-time .pick-up-time-form .form-row textarea {
-    display: inline-block;
-    vertical-align: top;
-    width: 100%;
-    height: 37px;
-    /* padding: 0px 10px 0px 10px;*/
-    background: #fff;
-    border: 1px #a0a1a1 solid;
-    font-family: 'Montserrat', Verdana, Geneva, Tahoma, sans-serif;
-    font-weight: 300;
-    font-size: 16px;
-    color: #5c5856;
-    line-height: 37px;
-    resize: none;
-    transition: all 0.3s ease-in-out;
-    -webkit-transition: all 0.3s ease-in-out;
-}
-
-.pick-up-time .pick-up-time-form .form-row textarea {
-    height: 100px;
-    padding: 5px 10px 5px 10px;
-}
-
-.pick-up-time .pick-up-time-form .form-row input[type=radio] {
-    display: inline-block;
-    vertical-align: top;
-    width: auto;
-    margin: 14px 10px 0px 0px;
-    transform: scale(1.5);
-    -wbkit-transform: scale(1.5);
-}
-
-.pick-up-time .pick-up-time-form .form-row input[type=text]:focus,
-.pick-up-time .pick-up-time-form .form-row input[type=email]:focus,
-.pick-up-time .pick-up-time-form .form-row input[type=url]:focus,
-.pick-up-time .pick-up-time-form .form-row input[type=tel]:focus,
-.pick-up-time .pick-up-time-form .form-row input[type=number]:focus,
-.pick-up-time .pick-up-time-form .form-row input[type=password]:focus,
-.pick-up-time .pick-up-time-form .form-row input[type=date]:focus,
-.pick-up-time .pick-up-time-form .form-row input[type=time]:focus,
-.pick-up-time .pick-up-time-form .form-row select:focus,
-.pick-up-time .pick-up-time-form .form-row textarea:focus {
-    border: 1px #55c34c solid;
-}
-
-.pick-up-time .pick-up-time-form .form-row input[type=submit],
-.pick-up-time .pick-up-time-form .form-row input[type=button],
-.pick-up-time .pick-up-time-form .form-row button[type=submit] {
-    display: inline-block;
-    vertical-align: top;
-    width: auto;
-    height: auto;
-    padding: 7px 50px 8px 50px;
-    background: #55c34c;
-    border: none;
-    border-radius: 0;
-    text-transform: uppercase;
-    font-family: 'Montserrat', Verdana, Geneva, Tahoma, sans-serif;
-    font-weight: 700;
-    font-size: 16px;
-    color: #fff;
-    line-height: 25px;
-    cursor: pointer;
-    transition: all 0.3s ease-in-out;
-    -webkit-transition: all 0.3s ease-in-out;
-}
-
-.form_field {
-    margin-bottom: 5px;
-}
-
-    .form_field label {
-        float: left;
-        width: auto;
-        font-weight: bold;
-        margin-top: 5px;
-        line-height: 32px;
-    }
-
-    .form_field .custom_text_box {
-        float: right;
-        width: 50%;
-        position: relative;
-        height: 40px;
-    }
-
-        .form_field .custom_text_box:after {
-            width: 40px;
-            height: 38px;
-            position: absolute;
-            right: 1px;
-            top: 1px;
-            content: "";
-            pointer-events: none;
+        .pick-up-time .pick-up-time-form .form-row.last {
+            margin: 0;
         }
 
-
-    .form_field .custom_select_box {
-        float: right;
-        width: 100%;
-        position: relative;
-    }
-
-        .form_field .custom_select_box:after {
-            background: #ededed url("images/arrow1.png") no-repeat center center;
-            width: 40px;
-            height: 38px;
-            position: absolute;
-            right: 1px;
-            top: 1px;
-            content: "";
-            pointer-events: none;
+        .pick-up-time .pick-up-time-form .form-row.buttom {
+            text-align: center;
         }
 
-        .form_field .custom_select_box select {
-            /* margin-bottom: 10px;*/
+        .pick-up-time .pick-up-time-form .form-row > *:last-child {
+            margin-bottom: 0 !important;
+        }
+
+        .pick-up-time .pick-up-time-form .form-row label {
+            display: inline-block;
+            vertical-align: top;
+            width: auto;
+            height: auto;
+            margin: 0px 0px 7px 0px;
+            font-family: 'Montserrat', Verdana, Geneva, Tahoma, sans-serif;
+            font-weight: 700;
+            font-size: 16px;
+            color: #5c5856;
+            line-height: 35px;
+        }
+
+            .pick-up-time .pick-up-time-form .form-row label span {
+                display: block;
+                font-weight: 300;
+                font-size: 13px;
+                color: #979797;
+                line-height: 22px;
+            }
+
+        .pick-up-time .pick-up-time-form .form-row input[type=text],
+        .pick-up-time .pick-up-time-form .form-row input[type=email],
+        .pick-up-time .pick-up-time-form .form-row input[type=url],
+        .pick-up-time .pick-up-time-form .form-row input[type=tel],
+        .pick-up-time .pick-up-time-form .form-row input[type=number],
+        .pick-up-time .pick-up-time-form .form-row input[type=password],
+        .pick-up-time .pick-up-time-form .form-row input[type=date],
+        .pick-up-time .pick-up-time-form .form-row input[type=time],
+        .pick-up-time .pick-up-time-form .form-row select,
+        .pick-up-time .pick-up-time-form .form-row textarea {
+            display: inline-block;
+            vertical-align: top;
             width: 100%;
-            background: none;
+            height: 37px;
+            padding: 0px 10px 0px 10px;
+            background: #fff;
+            border: 1px #a0a1a1 solid;
+            font-family: 'Montserrat', Verdana, Geneva, Tahoma, sans-serif;
+            font-weight: 300;
+            font-size: 16px;
+            color: #5c5856;
+            line-height: 37px;
+            resize: none;
+            transition: all 0.3s ease-in-out;
+            -webkit-transition: all 0.3s ease-in-out;
         }
 
-.advice-err {
-    font-size: 11px;
+        .pick-up-time .pick-up-time-form .form-row textarea {
+            height: 100px;
+            padding: 5px 10px 5px 10px;
+        }
+
+        .pick-up-time .pick-up-time-form .form-row input[type=radio] {
+            display: inline-block;
+            vertical-align: top;
+            width: auto;
+            margin: 14px 10px 0px 0px;
+            transform: scale(1.5);
+            -wbkit-transform: scale(1.5);
+        }
+
+        .pick-up-time .pick-up-time-form .form-row input[type=text]:focus,
+        .pick-up-time .pick-up-time-form .form-row input[type=email]:focus,
+        .pick-up-time .pick-up-time-form .form-row input[type=url]:focus,
+        .pick-up-time .pick-up-time-form .form-row input[type=tel]:focus,
+        .pick-up-time .pick-up-time-form .form-row input[type=number]:focus,
+        .pick-up-time .pick-up-time-form .form-row input[type=password]:focus,
+        .pick-up-time .pick-up-time-form .form-row input[type=date]:focus,
+        .pick-up-time .pick-up-time-form .form-row input[type=time]:focus,
+        .pick-up-time .pick-up-time-form .form-row select:focus,
+        .pick-up-time .pick-up-time-form .form-row textarea:focus {
+            border: 1px #55c34c solid;
+        }
+
+        .pick-up-time .pick-up-time-form .form-row input[type=submit],
+        .pick-up-time .pick-up-time-form .form-row input[type=button],
+        .pick-up-time .pick-up-time-form .form-row button[type=submit] {
+            display: inline-block;
+            vertical-align: top;
+            width: auto;
+            height: auto;
+            padding: 7px 50px 8px 50px;
+            background: #55c34c;
+            border: none;
+            border-radius: 0;
+            text-transform: uppercase;
+            font-family: 'Montserrat', Verdana, Geneva, Tahoma, sans-serif;
+            font-weight: 700;
+            font-size: 16px;
+            color: #fff;
+            line-height: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease-in-out;
+            -webkit-transition: all 0.3s ease-in-out;
+        }
+
+
+
+.form_field .custom_select_box {
+    float: right;
+    width: 100%;
+    position: relative;
 }
 
-.form_field {
-    margin-bottom: 10px;
-}
-
-    .form_field .custom_select_box select option {
-        background: #fff;
+    .form_field .custom_select_box:after {
+        background: #ededed url("images/arrow1.png") no-repeat center center;
+        width: 40px;
+        height: 38px;
+        position: absolute;
+        right: 1px;
+        top: 1px;
+        content: "";
+        pointer-events: none;
     }
 
-.changeStore span {
-    margin-right: 4px;
-}
+    .form_field .custom_select_box select {
+        margin-bottom: 10px;
+        width: 100%;
+        background: none;
+    }
+
+        .form_field .custom_select_box select option {
+            background: #fff;
+        }
 
 select {
     -webkit-appearance: menulist;
@@ -1498,7 +1405,7 @@ select {
     width: 100%;
     border-top: 2px solid #000;
     border-bottom: 2px solid #000;
-    /*   margin-bottom: 20px;*/
+    margin-bottom: 20px;
 }
 
     .table1 tr:last-child td {
@@ -1541,13 +1448,12 @@ body {
         list-style: disc;
     }
 
-.banner {
-    background: #f4f1f1;
-}
-
-    .banner img {
-        width: 100%;
+    .banner{
+        background: #f4f1f1;
     }
+.banner img {
+    width: 100%;
+}
 
 .mainContent {
     padding-top: 30px;
@@ -1682,7 +1588,8 @@ body {
     margin-top: 15px;
     color: #332f2f;
 }
-
+.prodImg
+{}
 
 .added_overlay {
     background: rgba(83,184,72,.78);
@@ -1701,29 +1608,35 @@ body {
 
 .add_item li:hover .added_overlay { /*display: block;*/
 }
-
+.open_close_img {
+   position: absolute;
+    background-color: green;
+    opacity: .5;
+    width: 100%;
+    height: 100%;
+}
 .open_close {
+    position:relative;
     display: block;
     background: rgba(83,184,72,.78);
 }
-
 .btnPopup {
     background: #fff;
     border-radius: 0;
     color: #2b2626;
     margin-top: 16px;
     padding: 7px 10px;
-    border: 0;
-    font-family: 'Montserrat';
-    font-size: 16px;
+	border:0;
+	font-family:'Montserrat';
+	font-size:16px;
 }
 
 .alert_popup {
     padding-top: 10px;
-    width: 222px;
+    width: 218px;
     /* height: 100px;*/
     position: absolute;
-    left: 50%;
+    left: 58%;
     top: 50%;
     text-align: center;
     vertical-align: middle;
@@ -1741,6 +1654,34 @@ body {
         font-weight: bold;
         text-transform: uppercase;
         margin: 10px 0;
-        font-weight: normal;
-        color: white;
     }
+
+    .alert_popup img {
+        width:70px;
+        height:80px;
+    }
+
+
+    input[type="submit"], .my_order, .btn-submit-pickup {
+    background: #50b848;
+    padding: 10px;
+    display: inline-block;
+    color: #fff;
+    text-transform: uppercase;
+    font-weight: bold;
+    font-size: 18px;
+    border: none;
+    cursor: pointer;
+    border-radius: 0;
+    margin-left:35%;
+}
+
+     input[type="submit"]:hover, .my_order:hover, .btn-submit-pickup:hover {
+        background: #333;
+    }
+.my_order {
+    display: table;
+    margin: 0 auto;
+    width: auto;
+    padding: 15px 25px;
+}
