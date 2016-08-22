@@ -786,7 +786,6 @@ function processImage(img) {
 }
 
 function addvariantExtrastocart() {
-    alert("A");
     var extras = [];
     var variantSteps = localStorage.getItem("variantSteps");
     $.each($('.card.open_close'), function () {
@@ -796,6 +795,8 @@ function addvariantExtrastocart() {
 
     if (variantSteps <= $('.card.open_close').length) {
         var postData = {
+            storeId: $(".selectStore").val(),
+            time: $(".selectTime").val(),
             sessionValue: localStorage.getItem("userBrowserKey"),
             variantId: $("#mainVariantId").val(),
             qty: "1",
