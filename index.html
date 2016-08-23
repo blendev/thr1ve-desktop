@@ -223,8 +223,8 @@
                                 <!-- nav -->
                                 <nav class="nav pull-left hidden">
                                     <ul class="changeStore">
-                                        <li>Picking up from: <a href="#" onclick="changeStore()"> (change)</a></li>
-                                        <li>@ <a href="#" onclick="changeStore()"> (change)</a></li>
+                                        <li>Picking up from: <a href="#" onclick="changeStore()">&nbsp; (change)</a></li>
+                                        <li>@ <a href="#" onclick="changeStore()"> &nbsp; (change)</a></li>
                                     </ul>
                                     <ul class="changeStoreSelect" style="display:none;">
                                         <li>
@@ -269,8 +269,8 @@
                             <!-- location_where_detect -->
                             <div class="location_where_detect">
                                 <h1>Where are you?</h1>
-                                <h2>Find your nearest THR1VE store for your order pick up.</h2>
-                                <h3>Select your store or<strong> Click the compass</strong> to find your nearest store.</h3>
+                                <h2>Select your nearest THR1VE store for your order pick up.</h2>
+                                <!--<h3>Select your store or<strong> Click the compass</strong> to find your nearest store.</h3>-->
                                 <div class="location-detect-form">
                                     <form id="indexform">
                                         <div class="form_field clearfix pickup-field-sec">
@@ -292,7 +292,7 @@
                                         <div class="form-row">
                                             <input type="submit" value="Let's Go!" data-role="none">
                                         </div>
-                                        <img class="indexform-after" src="images/compass.png" onclick="selectNearestStore(-1)" />
+                                        <!--<img class="indexform-after" src="images/compass.png" onclick="selectNearestStore(-1)" />-->
                                     </form>
                                 </div>
                                 <p><strong>Don't stress (it's bad for you)</strong> <br> If you're unsure of which location is your nearest, you can always change your location before confirming your order.</p>
@@ -387,8 +387,8 @@
                                 <!-- nav -->
                                 <nav class="nav pull-left">
                                     <ul class="changeStore">
-                                        <li>Picking up from: <span class="currentSelectedStore"></span><a href="#" onclick="changeStore()">(change)</a></li>
-                                        <li>@ <span class="currentSelectedTime"></span><a href="#" onclick="changeStore()">(change)</a></li>
+                                        <li>Picking up from: <span class="currentSelectedStore"></span><a href="#" onclick="changeStore()">&nbsp;(change)</a></li>
+                                        <li>@ <span class="currentSelectedTime"></span><a href="#" onclick="changeStore()">&nbsp;(change)</a></li>
                                     </ul>
                                     <ul class="changeStoreSelect" style="display:none;">
                                         <li>
@@ -721,7 +721,7 @@
                             <div id="divAddtocart">
 
                             </div>
-                            <div class="table-responsive">
+                            <div class="table-responsive" style="border:none;">
                                 <table class="table">
                                     <tbody id="selproductExtras"></tbody>
                                 </table>
@@ -733,7 +733,7 @@
                         <!-- pick-up-time -->
                     </div>
                 </div>
-                
+
             </div>
         </div>
 

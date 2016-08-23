@@ -397,6 +397,8 @@ function placeOrder(nonce, repeatCustomer) {
                     }
                     else if (data.orderDetails.BraintreeStatus == "Payment Success")
                         messageReqButtonClick("<h1>HANG ON...</h1>We can't reach the store right now, please try again later! Your payment has been voided, any pending transactions in your bank account will disappear within 72 hours.<br><button type='button' class='btnPopup'>OK, GOT IT!</button>");
+                    else if (data.orderDetails.BraintreeStatus.indexOf("payment_method_nonce does not contain a valid payment instrument type.") >= 0)
+                        messageReqButtonClick("<h1>HANG ON...</h1> We’re sorry, THR1VE does not currently accept AMEX. We are working on having this resolved soon!<br><button type='button' class='btnPopup'>OK, GOT IT!</button>");
                     else if (data.orderDetails.BraintreeStatus.indexOf("Nonce") < 0)
                         messageReqButtonClick("<h1>HANG ON...</h1>We weren't able to process your payment. Please check your details and try again.<br><button type='button' class='btnPopup'>OK, GOT IT!</button>");
 
@@ -469,7 +471,7 @@ function resetCart() {
     selectNearestStore($(".selectStore").val());
     sessionStorage.setItem("cartItems", 0);
 
-    localStorage.setItem("userBrowserKey", createSession());
+    localStorage.setItem("userBrowserKey", createSession(false));
 }
 
 function message(msg) {

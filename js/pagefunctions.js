@@ -6,9 +6,8 @@ $(document).ajaxStop(function () {
     if ($("body").hasClass("loading")) $("body").removeClass("loading"); // Hide spinning wheel when ajax query is finished
 });
 
-var apiURL = "https://order.thr1ve.me/api/";
-//var apiURL = "http://www.thr1ve.blendev.com/api/";
-//var apiURL = "http://localhost:53095/api/";
+//var apiURL = "https://order.thr1ve.me/api/";            //Desktop API
+var apiURL = "http://localhost:53095/api/";
 
 $(document).ready(function () {
     //initMap();
@@ -80,6 +79,7 @@ $(document).ready(function () {
         if ($(".selectStore").val() == "" || $(".selectStore").val() == "0") {
             $(".selectTime").append($("<option>", { selected: true, value: "0", text: "Please select..." }));
             $("#divJog").hide();
+            bindProducts(JSON.parse(localStorage.getItem("colelctionsResponse")));
             return;
         }
 
@@ -136,6 +136,7 @@ $(document).ready(function () {
                 $(".currentSelectedStore").text($("#checkoutSelectStore :selected").text());
                 $(".currentSelectedTime").text($("#checkoutSelectStoreTime").val());
                 checkCollectionTime();
+                bindProducts(JSON.parse(localStorage.getItem("colelctionsResponse")));
             },
             error: function (jqXHR, textStatus, errorThrown) {
                 message("<h1>Whoops!</h1>Something went wrong, please try again later.");
@@ -145,7 +146,7 @@ $(document).ready(function () {
 
         selectNearestStore($(".selectStore").val());
         // *** Update session
-        bindProducts(JSON.parse(localStorage.getItem("colelctionsResponse")));
+        
     });
 
     $(".selectTime").change(function () {
@@ -155,6 +156,7 @@ $(document).ready(function () {
         $(".currentSelectedTime").text($("#checkoutSelectStoreTime").val());
 
         checkCollectionTime();
+        bindProducts(JSON.parse(localStorage.getItem("colelctionsResponse")));
     });
 
     $(".currentSelectedStore").text("Please Select...");
@@ -163,7 +165,7 @@ $(document).ready(function () {
     getOrderTypes();
 });
 
-function createSession() {
+function createSession(refreshStores) {
     var postData = {
         AppType: "web",
         AppVersion: "",
@@ -179,67 +181,69 @@ function createSession() {
         success: function (data) {
             localStorage.setItem("userBrowserKey", data.SessionId);
             getCart(false);
-            $.ajax({
-                url: apiURL + "GetStores",
-                type: "GET",
-                dataType: "json",
-                crossDomain: true,
-                success: function (data) {
-                    $(".selectStore").empty();
-                    $(".selectStore").append($("<option>", { selected: true, value: "0", text: "Please Select..." }));
-                    initializeMapMarkers(null, "1");
-                    localStorage.setItem("storeList", JSON.stringify(data.stores));
-                    $.each(data.stores, function () {
-                        $(".selectStore").append($("<option>", { value: this["StoreId"], text: this["StoreName"] }));
-                        var _Latitude = this["Latitude"];
-                        var _Longitude = this["Longitude"];
-                        if (_Latitude != null && _Longitude != null) {
-                            var pos = {
-                                lat: _Latitude,
-                                lng: _Longitude
-                            };
-                            initializeMapMarkers(pos, "2", this["StoreName"], this["Image"], this["PhoneNumber"], this["OpenTimeText"], this["StoreId"]);
-                            //displayMarkers(pos);
-                        }
-                    });
-                    selectStore();
-                },
-                error: function (jqXHR, textStatus, errorThrown) {
-                    message("<h1>Whoops!</h1>Something went wrong, please try again later.");
-                }
-            });
+            if (refreshStores) {
+                $.ajax({
+                    url: apiURL + "GetStores",
+                    type: "GET",
+                    dataType: "json",
+                    crossDomain: true,
+                    success: function (data) {
+                        $(".selectStore").empty();
+                        $(".selectStore").append($("<option>", { selected: true, value: "0", text: "Please Select..." }));
+                        initializeMapMarkers(null, "1");
+                        localStorage.setItem("storeList", JSON.stringify(data.stores));
+                        $.each(data.stores, function () {
+                            $(".selectStore").append($("<option>", { value: this["StoreId"], text: this["StoreName"] }));
+                            var _Latitude = this["Latitude"];
+                            var _Longitude = this["Longitude"];
+                            if (_Latitude != null && _Longitude != null) {
+                                var pos = {
+                                    lat: _Latitude,
+                                    lng: _Longitude
+                                };
+                                initializeMapMarkers(pos, "2", this["StoreName"], this["Image"], this["PhoneNumber"], this["OpenTimeText"], this["StoreId"]);
+                                //displayMarkers(pos);
+                            }
+                        });
+                        selectStore();
+                    },
+                    error: function (jqXHR, textStatus, errorThrown) {
+                        message("<h1>Whoops!</h1>Something went wrong, please try again later.");
+                    }
+                });
 
-            // Populate the categories tabs from the API
-            $.ajax({
-                url: apiURL + "GetCollections",
-                type: "GET",
-                dataType: "json",
-                crossDomain: true,
-                success: function (colelctionsResponse) {
-                    //var productionCollection = JSON.parse(localStorage.getItem("productCollection"));
-                    //if (productionCollection != null && productionCollection.length > 0)
-                    //{ bindProducts(colelctionsResponse); } else {
-                    localStorage.setItem("colelctionsResponse", JSON.stringify(colelctionsResponse));
-                    $.ajax({
-                        url: apiURL + "GetProducts",
-                        type: "POST",
-                        dataType: "json",
-                        data: "collectionId=" + null,
-                        crossDomain: true,
-                        success: function (productsResponse) {
-                            localStorage.setItem("productCollection", JSON.stringify(productsResponse.products));
-                            bindProducts(colelctionsResponse);
-                        },
-                        error: function (jqXHR, textStatus, errorThrown) {
-                            message("<h1>Whoops!</h1>Something went wrong, please try again later.");
-                        }
-                    });
-                    //}
-                },
-                error: function (jqXHR, textStatus, errorThrown) {
-                    message("<h1>Whoops!</h1>Something went wrong, please try again later.");
-                }
-            });
+                // Populate the categories tabs from the API
+                $.ajax({
+                    url: apiURL + "GetCollections",
+                    type: "GET",
+                    dataType: "json",
+                    crossDomain: true,
+                    success: function (colelctionsResponse) {
+                        //var productionCollection = JSON.parse(localStorage.getItem("productCollection"));
+                        //if (productionCollection != null && productionCollection.length > 0)
+                        //{ bindProducts(colelctionsResponse); } else {
+                        localStorage.setItem("colelctionsResponse", JSON.stringify(colelctionsResponse));
+                        $.ajax({
+                            url: apiURL + "GetProducts",
+                            type: "POST",
+                            dataType: "json",
+                            data: "collectionId=" + null,
+                            crossDomain: true,
+                            success: function (productsResponse) {
+                                localStorage.setItem("productCollection", JSON.stringify(productsResponse.products));
+                                bindProducts(colelctionsResponse);
+                            },
+                            error: function (jqXHR, textStatus, errorThrown) {
+                                message("<h1>Whoops!</h1>Something went wrong, please try again later.");
+                            }
+                        });
+                        //}
+                    },
+                    error: function (jqXHR, textStatus, errorThrown) {
+                        message("<h1>Whoops!</h1>Something went wrong, please try again later.");
+                    }
+                });
+            }
         },
         error: function (jqXHR, textStatus, errorThrown) {
             message("<h1>Whoops!</h1>Something went wrong, Session could not be start. please try again later.");
@@ -307,76 +311,90 @@ function bindProducts(colelctionsResponse) {
                 }
 
                 if (addProduct) {
-                    var tag1Image = "";
-                    //var img2 = "";
-                    //var img3 = "";
-
                     var barcode = this.barCode;
-                    var barCodeAllergens = "";
+                    
+                    var displayFrom = barcode.substring(barcode.indexOf("displayFrom"));
+                    if (displayFrom.indexOf(";") >= 0)
+                        displayFrom = displayFrom.substring(0, displayFrom.indexOf(";"));
 
-                    if (barcode != null && barcode != "") {
+                    var displayTo = barcode.substring(barcode.indexOf("displayTo"));
+                    if (displayTo.indexOf(";") >= 0)
+                        displayTo = displayTo.substring(0, displayTo.indexOf(";"));
 
-                        if (barcode.indexOf("allergens") >= 0) {
-                            barCodeAllergens = barcode.substring(barcode.indexOf("allergens"));
-                            barCodeAllergens = barCodeAllergens.split(':')[1].split(',');
-                        }
-                        if (barcode.indexOf("tag1") >= 0)
-                            tag1Image = "images/tag1.png";
-                        //if (barcode.indexOf("img2") >= 0)
-                        //    img2 = "images/img2.png";
-                        //if (barcode.indexOf("img3") >= 0)
-                        //    img3 = "images/img3.png";
-                    }
-                    var _price = "";
-                    if (this["price"] > 0)
-                        _price = "$" + this["price"];
+                    displayFrom = displayFrom.split(':')[1].split(',').toString().trim();
+                    displayTo = displayTo.split(':')[1].split(',').toString().trim();
+                    debugger;
+                    if ((checkProductTime(displayFrom, displayTo)) || (displayFrom == "" || displayTo == "")) {
+                        var tag1Image = "";
 
-                    if (this.variants.length > 0)
-                        _price = "";
+                        var barCodeAllergens = "";
 
-                    if (this["title"].indexOf("#") < 0) {
-                        var productImg = processImage(this["image"]);
-                        if (this.variants == null || this.variants.length === 0) {
+                        if (barcode != null && barcode != "") {
 
-                            var extrasExtra = this.extras;
-                            var vId = extrasExtra == null ? null : extrasExtra[0].variantId;
-                            var resultExtras = null;
-                            if (vId != null && vId != undefined) {
-                                resultExtras = productionCollection.filter(function (obj) { return obj.variantId == vId; });
+                            if (barcode.indexOf("allergens") >= 0) {
+                                barCodeAllergens = barcode.substring(barcode.indexOf("allergens"));
+                                if (barCodeAllergens.indexOf(";") >= 0)
+                                    barCodeAllergens = barCodeAllergens.substring(0, barCodeAllergens.indexOf(";"));
+                                barCodeAllergens = barCodeAllergens.split(':')[1].split(',');
                             }
+                            if (barcode.indexOf("tag1") >= 0)
+                                tag1Image = "images/tag1.png";
+                            //if (barcode.indexOf("img2") >= 0)
+                            //    img2 = "images/img2.png";
+                            //if (barcode.indexOf("img3") >= 0)
+                            //    img3 = "images/img3.png";
+                        }
+                        var _price = "";
+                        if (this["price"] > 0)
+                            _price = "$" + this["price"];
 
-                            if (resultExtras != null && resultExtras.length > 0) {
+                        if (this.variants.length > 0)
+                            _price = "";
 
-                                newParent = newParent + '<div class="col-lg-3 col-md-3 col-sm-6 col-xs-12" data-toggle="modal"  data-target="#MenuSelect1" onclick="loadproduct(' + this["productId"] + ');">';
+                        if (this["title"].indexOf("#") < 0) {
+                            var productImg = processImage(this["image"]);
+                            if (this.variants == null || this.variants.length === 0) {
+
+                                var extrasExtra = this.extras;
+                                var vId = extrasExtra == null ? null : extrasExtra[0].variantId;
+                                var resultExtras = null;
+                                if (vId != null && vId != undefined) {
+                                    resultExtras = productionCollection.filter(function (obj) { return obj.variantId == vId; });
+                                }
+
+                                if (resultExtras != null && resultExtras.length > 0) {
+
+                                    newParent = newParent + '<div class="col-lg-3 col-md-3 col-sm-6 col-xs-12" data-toggle="modal"  data-target="#MenuSelect1" onclick="loadproduct(' + this["productId"] + ');">';
+                                }
+                                else
+                                    newParent = newParent + '<div class="col-lg-3 col-md-3 col-sm-6 col-xs-12" data-toggle="modal"  data-target="#MenuSelect" onclick="loadproduct(' + this["productId"] + ');">';
                             }
                             else
-                                newParent = newParent + '<div class="col-lg-3 col-md-3 col-sm-6 col-xs-12" data-toggle="modal"  data-target="#MenuSelect" onclick="loadproduct(' + this["productId"] + ');">';
-                        }
-                        else
-                            newParent = newParent + '<div class="col-lg-3 col-md-3 col-sm-6 col-xs-12" data-toggle="modal"  data-target="#MenuSelect1" onclick="loadproduct(' + this["productId"] + ');">';
-                        newParent = newParent + '<div class="menu_list_item">';
-                        newParent = newParent + '<div class="holder matchHeight">';
-                        newParent = newParent + '<div class="pic"><img src="' + productImg + '" alt="" width="322" height="290"></div>';
-                        newParent = newParent + '<div class="data">';
-                        newParent = newParent + '<h3><a>' + this["title"] + '</a></h3>';
-                        newParent = newParent + '<h4>' + _price + '</h4>';
-                        newParent = newParent + '<ul class="feature">';
+                                newParent = newParent + '<div class="col-lg-3 col-md-3 col-sm-6 col-xs-12" data-toggle="modal"  data-target="#MenuSelect1" onclick="loadproduct(' + this["productId"] + ');">';
+                            newParent = newParent + '<div class="menu_list_item">';
+                            newParent = newParent + '<div class="holder matchHeight">';
+                            newParent = newParent + '<div class="pic"><img src="' + productImg + '" alt="" width="322" height="290"></div>';
+                            newParent = newParent + '<div class="data">';
+                            newParent = newParent + '<h3><a>' + this["title"] + '</a></h3>';
+                            newParent = newParent + '<h4>' + _price + '</h4>';
+                            newParent = newParent + '<ul class="feature">';
 
-                        for (var im = 0; im < barCodeAllergens.length; im++) {
-                            newParent = newParent + '<li><img src="images/' + barCodeAllergens[im].toString().trim() + '"></li>';
-                        }
-                        //if (img2 != "")
-                        //    newParent = newParent + '<li class="veg visible"></li>';
-                        //if (img3 != "")
-                        //    newParent = newParent + '<li class="milk visible"></li>';
-                        //newParent = newParent + '<li class="juice visible"></li>';
-                        newParent = newParent + '</ul>';
-                        newParent = newParent + '<p>' + this["descriptionHtml"] + '</p>';
+                            for (var im = 0; im < barCodeAllergens.length; im++) {
+                                newParent = newParent + '<li><img src="images/' + barCodeAllergens[im].toString().trim() + '"></li>';
+                            }
+                            //if (img2 != "")
+                            //    newParent = newParent + '<li class="veg visible"></li>';
+                            //if (img3 != "")
+                            //    newParent = newParent + '<li class="milk visible"></li>';
+                            //newParent = newParent + '<li class="juice visible"></li>';
+                            newParent = newParent + '</ul>';
+                            newParent = newParent + '<p>' + this["descriptionHtml"] + '</p>';
 
-                        newParent = newParent + '</div>';
-                        newParent = newParent + '</div>';
-                        newParent = newParent + '</div>';
-                        newParent = newParent + '</div>';
+                            newParent = newParent + '</div>';
+                            newParent = newParent + '</div>';
+                            newParent = newParent + '</div>';
+                            newParent = newParent + '</div>';
+                        }
                     }
                 }
             });
@@ -424,6 +442,24 @@ function checkCollectionTime() {
                 $("#li" + this["id"]).hide();
         });
     }
+}
+
+function checkProductTime(displayFrom, displayTo) {
+
+    var selectedTime = $(".selectTime").val();
+
+    if (selectedTime == "ASAP") {
+        var selectedTime = $(".selectTime option:eq(1)").val();
+    }
+
+    if (selectedTime != null && selectedTime != 0) {
+        selectedTime = selectedTime.toString().replace(":", "");
+        if (selectedTime >= displayFrom && selectedTime <= displayTo)
+            return false;
+        else
+            return true;
+    }
+    return true;
 }
 
 function showProductTab(collectionId) {
@@ -571,7 +607,7 @@ function InitLocalStorage() {
     // Create a new sessionId
     //localStorage.setItem("userBrowserKey", getSessionId())
 
-    createSession();
+    createSession(true);
 }
 
 function SaveDataToLocalStorage(data) {
@@ -587,7 +623,7 @@ function SaveDataToLocalStorage(data) {
 
 function loadproduct(productId) {
     if ($(".selectStore").val() == '' || $(".selectStore").val() == '0') {
-        debugger;
+        
         $(".selectStore").addClass("validation");
         setTimeout(function () {
             $('.selectStore').removeClass("validation");
@@ -602,7 +638,7 @@ function loadproduct(productId) {
         
         $("#productFeatureModal").empty();
         localStorage.removeItem("steptext");
-        debugger;
+        
         var data = [];
         // Parse the serialized data back into an array of objects
         data = JSON.parse(localStorage.getItem('productCollection'));
@@ -614,6 +650,8 @@ function loadproduct(productId) {
         if (barcode != null && barcode != "") {
             if (barcode.indexOf("allergens") >= 0) {
                 barCodeAllergens = barcode.substring(barcode.indexOf("allergens"));
+                if (barCodeAllergens.indexOf(";") >= 0)
+                    barCodeAllergens = barCodeAllergens.substring(0, barCodeAllergens.indexOf(";"));
                 barCodeAllergens = barCodeAllergens.split(':')[1].split(',');
             }
             //if (barcode.indexOf("img2") >= 0)
@@ -711,7 +749,7 @@ function loadproduct(productId) {
                 $(".add_item li").click(function () {
                     $(this).parent("ul").find(".card").removeClass("open_close");
                     $(this).find(".card").toggleClass("open_close");
-                    debugger;
+                    
                     $(this).parent("ul").find(".prodImg").removeClass("open_close_img");
                     $(this).find(".prodImg").toggleClass("open_close_img");
                 });
@@ -719,7 +757,7 @@ function loadproduct(productId) {
             $("#addvarianttoCart").show();
 
             $(".add_item li").click(function () {
-                debugger;
+                
                 $(this).find(".added_overlay").toggleClass("open_close");
             });
         }
@@ -789,11 +827,17 @@ function addvariantExtrastocart() {
     var extras = [];
     var variantSteps = localStorage.getItem("variantSteps");
     $.each($('.card.open_close'), function () {
-
         extras.push({ 'variantId': '' + this.id + '' });
     });
+    var validSteps = true;
+    $("#variantSteps > .productList").each(function () {
+        debugger;
+        var op = $(this).find(".open_close");
+        if (op.length <= 0)
+            validSteps = false;
+    });
 
-    if (variantSteps <= $('.card.open_close').length) {
+    if (validSteps) {
         var postData = {
             storeId: $(".selectStore").val(),
             time: $(".selectTime").val(),
@@ -811,7 +855,7 @@ function addvariantExtrastocart() {
             data: postData,
             crossDomain: true,
             success: function (data) {
-                debugger;
+                
                 if (!data.isSuccess && data.errorMessage.indexOf("BasketOverLimit") >= 0) {
                     var maxOrderAmount = data.errorMessage.substring(data.errorMessage.indexOf("#") + 1);
                     window.location.href = "#menupage";
@@ -831,10 +875,11 @@ function addvariantExtrastocart() {
         });
     }
     else
-        messageReqButtonClick("<h1>HANG ON...</h1>You have to choose at least one to proceed, please<button type='button' class='btnPopup'>OK, GOT IT!</button>");
+        messageReqButtonClick("<h1>HANG ON...</h1>You have to choose at least one from each step to proceed, please<button type='button' class='btnPopup'>OK, GOT IT!</button>");
 }
 
 function addvarianttocart() {
+    
     var _variantTitle = "";
     var variantSteps = localStorage.getItem("variantSteps");
     $.each($('.card.open_close'), function () {

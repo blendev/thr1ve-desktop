@@ -1346,9 +1346,9 @@ select {
 }
 
 #indexform {
-    padding-left: 15px;
+    /*padding-left: 15px;
     padding-right: 40px;
-    position: relative;
+    position: relative;*/
 }
 
 .indexform-after {
@@ -1684,4 +1684,9 @@ body {
     margin: 0 auto;
     width: auto;
     padding: 15px 25px;
+}
+
+.cartSubText {
+    font-weight: normal;
+    font-size: 10px;
 }
