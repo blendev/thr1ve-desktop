@@ -82,71 +82,74 @@ $(document).ready(function () {
             bindProducts(JSON.parse(localStorage.getItem("colelctionsResponse")));
             return;
         }
+        if (checkSession()) {
+            // Populate the time dropdown from the API
+            if (checkSession()) {
+                $.ajax({
+                    url: apiURL + localStorage.getItem("userBrowserKey") + "/GetStoreDetails",
+                    type: "POST",
+                    dataType: "json",
+                    data: {
+                        StoreId: $(".selectStore").val()
+                    },
+                    crossDomain: true,
+                    success: function (data) {
+                        if (isNaN(parseInt(data.storeDetails["OpenTime"], 10)) || isNaN(parseInt(data.storeDetails["CloseTime"], 10))) {
+                            $(".selectTime").append($("<option>", { selected: true, value: "0", text: "Store Closed" }));
+                            return;
+                        }
 
-        // Populate the time dropdown from the API
-        $.ajax({
-            url: apiURL + "GetStoreDetails",
-            type: "POST",
-            dataType: "json",
-            data: {
-                StoreId: $(".selectStore").val()
-            },
-            crossDomain: true,
-            success: function (data) {
-                if (isNaN(parseInt(data.storeDetails["OpenTime"], 10)) || isNaN(parseInt(data.storeDetails["CloseTime"], 10))) {
-                    $(".selectTime").append($("<option>", { selected: true, value: "0", text: "Store Closed" }));
-                    return;
-                }
+                        var openTime = new Date();
+                        openTime.setHours(data.storeDetails["OpenTime"].substr(0, 2), data.storeDetails["OpenTime"].substr(2, 2), 0, 0); // Set the opening time
 
-                var openTime = new Date();
-                openTime.setHours(data.storeDetails["OpenTime"].substr(0, 2), data.storeDetails["OpenTime"].substr(2, 2), 0, 0); // Set the opening time
+                        var closeTime = new Date();
+                        closeTime.setHours(data.storeDetails["CloseTime"].substr(0, 2), data.storeDetails["CloseTime"].substr(2, 2), 0, 0); // Set the closing time
 
-                var closeTime = new Date();
-                closeTime.setHours(data.storeDetails["CloseTime"].substr(0, 2), data.storeDetails["CloseTime"].substr(2, 2), 0, 0); // Set the closing time
+                        var currentTime = new Date(); // Get the current time
+                        var roundedCurrentTime = new Date(Math.ceil(currentTime.getTime() / 300000) * 300000); // Round current time up to the nearest 5 minutes
 
-                var currentTime = new Date(); // Get the current time
-                var roundedCurrentTime = new Date(Math.ceil(currentTime.getTime() / 300000) * 300000); // Round current time up to the nearest 5 minutes
+                        var timeSlot = new Date(Math.max(openTime, roundedCurrentTime)); // Set the first timeslot based on the opening time or current time, whichever is higher
 
-                var timeSlot = new Date(Math.max(openTime, roundedCurrentTime)); // Set the first timeslot based on the opening time or current time, whichever is higher
+                        // Create an array of times between opening/current and closing hours
+                        while (timeSlot < closeTime) {
+                            var time24 = ("0" + timeSlot.getHours()).substr(-2);// + ":" + ("0" + timeSlot.getMinutes()).substr(-2);
+                            if (time24 == "00")
+                                time24 = "12" + ":" + ("0" + timeSlot.getMinutes()).substr(-2);
+                            else
+                                time24 = time24 + ":" + ("0" + timeSlot.getMinutes()).substr(-2);
 
-                // Create an array of times between opening/current and closing hours
-                while (timeSlot < closeTime) {
-                    var time24 = ("0" + timeSlot.getHours()).substr(-2);// + ":" + ("0" + timeSlot.getMinutes()).substr(-2);
-                    if (time24 == "00")
-                        time24 = "12" + ":" + ("0" + timeSlot.getMinutes()).substr(-2);
-                    else
-                        time24 = time24 + ":" + ("0" + timeSlot.getMinutes()).substr(-2);
+                            var time12 = ("0" + (timeSlot.getHours() > 11 ? timeSlot.getHours() - 12 : timeSlot.getHours())).substr(-2);// + ":" + ("0" + timeSlot.getMinutes()).substr(-2) + (timeSlot.getHours() > 11 ? " PM" : " AM");
+                            if (time12 == "00")
+                                time12 = "12" + ":" + ("0" + timeSlot.getMinutes()).substr(-2) + (timeSlot.getHours() > 11 ? " PM" : " AM");
+                            else
+                                time12 = time12 + ":" + ("0" + timeSlot.getMinutes()).substr(-2) + (timeSlot.getHours() > 11 ? " PM" : " AM");
 
-                    var time12 = ("0" + (timeSlot.getHours() > 11 ? timeSlot.getHours() - 12 : timeSlot.getHours())).substr(-2);// + ":" + ("0" + timeSlot.getMinutes()).substr(-2) + (timeSlot.getHours() > 11 ? " PM" : " AM");
-                    if (time12 == "00")
-                        time12 = "12" + ":" + ("0" + timeSlot.getMinutes()).substr(-2) + (timeSlot.getHours() > 11 ? " PM" : " AM");
-                    else
-                        time12 = time12 + ":" + ("0" + timeSlot.getMinutes()).substr(-2) + (timeSlot.getHours() > 11 ? " PM" : " AM");
+                            if (timeSlot.getTime() === roundedCurrentTime.getTime()) {
+                                time24 = time12 = "ASAP"; // If the timeslot matches the rounded current time, rename it to ASAP
+                            }
+                            $(".selectTime").append($("<option>", { value: time24, text: time12 }));
+                            timeSlot.setMinutes(timeSlot.getMinutes() + 5);
+                        }
 
-                    if (timeSlot.getTime() === roundedCurrentTime.getTime()) {
-                        time24 = time12 = "ASAP"; // If the timeslot matches the rounded current time, rename it to ASAP
+                        if ($('select.selectTime option').length == 0) $(".selectTime").append($("<option>", { selected: true, value: "0", text: "Store Closed" }));
+                        if ($("body").hasClass("loading")) $("body").removeClass("loading"); // Hide spinning wheel when ajax query is finished
+
+                        $(".currentSelectedStore").text($("#checkoutSelectStore :selected").text());
+                        $(".currentSelectedTime").text($("#checkoutSelectStoreTime").val());
+                        checkCollectionTime();
+                        bindProducts(JSON.parse(localStorage.getItem("colelctionsResponse")));
+                    },
+                    error: function (jqXHR, textStatus, errorThrown) {
+                        message("<h1>Whoops!</h1>Something went wrong, please try again later.");
+                        if ($("body").hasClass("loading")) $("body").removeClass("loading"); // Hide spinning wheel when ajax query is finished
                     }
-                    $(".selectTime").append($("<option>", { value: time24, text: time12 }));
-                    timeSlot.setMinutes(timeSlot.getMinutes() + 5);
-                }
-
-                if ($('select.selectTime option').length == 0) $(".selectTime").append($("<option>", { selected: true, value: "0", text: "Store Closed" }));
-                if ($("body").hasClass("loading")) $("body").removeClass("loading"); // Hide spinning wheel when ajax query is finished
-
-                $(".currentSelectedStore").text($("#checkoutSelectStore :selected").text());
-                $(".currentSelectedTime").text($("#checkoutSelectStoreTime").val());
-                checkCollectionTime();
-                bindProducts(JSON.parse(localStorage.getItem("colelctionsResponse")));
-            },
-            error: function (jqXHR, textStatus, errorThrown) {
-                message("<h1>Whoops!</h1>Something went wrong, please try again later.");
-                if ($("body").hasClass("loading")) $("body").removeClass("loading"); // Hide spinning wheel when ajax query is finished
+                });
             }
-        });
+        }
 
         selectNearestStore($(".selectStore").val());
         // *** Update session
-        
+
     });
 
     $(".selectTime").change(function () {
@@ -172,6 +175,7 @@ function createSession(refreshStores) {
         UserAgent: getUserAgent(),
         CustomField: ""
     }
+
     $.ajax({
         url: apiURL + "session",
         type: "POST",
@@ -182,67 +186,72 @@ function createSession(refreshStores) {
             localStorage.setItem("userBrowserKey", data.SessionId);
             getCart(false);
             if (refreshStores) {
-                $.ajax({
-                    url: apiURL + "GetStores",
-                    type: "GET",
-                    dataType: "json",
-                    crossDomain: true,
-                    success: function (data) {
-                        $(".selectStore").empty();
-                        $(".selectStore").append($("<option>", { selected: true, value: "0", text: "Please Select..." }));
-                        initializeMapMarkers(null, "1");
-                        localStorage.setItem("storeList", JSON.stringify(data.stores));
-                        $.each(data.stores, function () {
-                            $(".selectStore").append($("<option>", { value: this["StoreId"], text: this["StoreName"] }));
-                            var _Latitude = this["Latitude"];
-                            var _Longitude = this["Longitude"];
-                            if (_Latitude != null && _Longitude != null) {
-                                var pos = {
-                                    lat: _Latitude,
-                                    lng: _Longitude
-                                };
-                                initializeMapMarkers(pos, "2", this["StoreName"], this["Image"], this["PhoneNumber"], this["OpenTimeText"], this["StoreId"]);
-                                //displayMarkers(pos);
+                if (checkSession()) {
+                    $.ajax({
+                        url: apiURL + localStorage.getItem("userBrowserKey") + "/GetStores",
+                        type: "GET",
+                        dataType: "json",
+                        crossDomain: true,
+                        success: function (data) {
+                            $(".selectStore").empty();
+                            $(".selectStore").append($("<option>", { selected: true, value: "0", text: "Please Select..." }));
+                            initializeMapMarkers(null, "1");
+                            localStorage.setItem("storeList", JSON.stringify(data.stores));
+                            $.each(data.stores, function () {
+                                $(".selectStore").append($("<option>", { value: this["StoreId"], text: this["StoreName"] }));
+                                var _Latitude = this["Latitude"];
+                                var _Longitude = this["Longitude"];
+                                if (_Latitude != null && _Longitude != null) {
+                                    var pos = {
+                                        lat: _Latitude,
+                                        lng: _Longitude
+                                    };
+                                    initializeMapMarkers(pos, "2", this["StoreName"], this["Image"], this["PhoneNumber"], this["OpenTimeText"], this["StoreId"]);
+                                    //displayMarkers(pos);
+                                }
+                            });
+                            selectStore();
+                        },
+                        error: function (jqXHR, textStatus, errorThrown) {
+                            message("<h1>Whoops!</h1>Something went wrong, please try again later.");
+                        }
+                    });
+                }
+                if (checkSession()) {
+                    // Populate the categories tabs from the API
+                    $.ajax({
+                        url: apiURL + localStorage.getItem("userBrowserKey") + "/GetCollections",
+                        type: "GET",
+                        dataType: "json",
+                        crossDomain: true,
+                        success: function (colelctionsResponse) {
+                            //var productionCollection = JSON.parse(localStorage.getItem("productCollection"));
+                            //if (productionCollection != null && productionCollection.length > 0)
+                            //{ bindProducts(colelctionsResponse); } else {
+                            localStorage.setItem("colelctionsResponse", JSON.stringify(colelctionsResponse));
+                            if (checkSession()) {
+                                $.ajax({
+                                    url: apiURL + localStorage.getItem("userBrowserKey") + "/GetProducts",
+                                    type: "POST",
+                                    dataType: "json",
+                                    data: "collectionId=" + null,
+                                    crossDomain: true,
+                                    success: function (productsResponse) {
+                                        localStorage.setItem("productCollection", JSON.stringify(productsResponse.products));
+                                        bindProducts(colelctionsResponse);
+                                    },
+                                    error: function (jqXHR, textStatus, errorThrown) {
+                                        message("<h1>Whoops!</h1>Something went wrong, please try again later.");
+                                    }
+                                });
                             }
-                        });
-                        selectStore();
-                    },
-                    error: function (jqXHR, textStatus, errorThrown) {
-                        message("<h1>Whoops!</h1>Something went wrong, please try again later.");
-                    }
-                });
-
-                // Populate the categories tabs from the API
-                $.ajax({
-                    url: apiURL + "GetCollections",
-                    type: "GET",
-                    dataType: "json",
-                    crossDomain: true,
-                    success: function (colelctionsResponse) {
-                        //var productionCollection = JSON.parse(localStorage.getItem("productCollection"));
-                        //if (productionCollection != null && productionCollection.length > 0)
-                        //{ bindProducts(colelctionsResponse); } else {
-                        localStorage.setItem("colelctionsResponse", JSON.stringify(colelctionsResponse));
-                        $.ajax({
-                            url: apiURL + "GetProducts",
-                            type: "POST",
-                            dataType: "json",
-                            data: "collectionId=" + null,
-                            crossDomain: true,
-                            success: function (productsResponse) {
-                                localStorage.setItem("productCollection", JSON.stringify(productsResponse.products));
-                                bindProducts(colelctionsResponse);
-                            },
-                            error: function (jqXHR, textStatus, errorThrown) {
-                                message("<h1>Whoops!</h1>Something went wrong, please try again later.");
-                            }
-                        });
-                        //}
-                    },
-                    error: function (jqXHR, textStatus, errorThrown) {
-                        message("<h1>Whoops!</h1>Something went wrong, please try again later.");
-                    }
-                });
+                            //}
+                        },
+                        error: function (jqXHR, textStatus, errorThrown) {
+                            message("<h1>Whoops!</h1>Something went wrong, please try again later.");
+                        }
+                    });
+                }
             }
         },
         error: function (jqXHR, textStatus, errorThrown) {
@@ -256,19 +265,21 @@ function getUserAgent() {
 }
 
 function getExcludedProducts() {
-    $.ajax({
-        url: apiURL + "GetExcludedProducts",
-        type: "GET",
-        dataType: "json",
-        crossDomain: true,
-        success: function (excludedProductsResponse) {
+    if (checkSession()) {
+        $.ajax({
+            url: apiURL + localStorage.getItem("userBrowserKey") + "/GetExcludedProducts",
+            type: "GET",
+            dataType: "json",
+            crossDomain: true,
+            success: function (excludedProductsResponse) {
 
-            localStorage.setItem("excludedProductCollection", JSON.stringify(excludedProductsResponse));
-        },
-        error: function (jqXHR, textStatus, errorThrown) {
-            message("<h1>Whoops!</h1>Something went wrong, please try again later.");
-        }
-    });
+                localStorage.setItem("excludedProductCollection", JSON.stringify(excludedProductsResponse));
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                message("<h1>Whoops!</h1>Something went wrong, please try again later.");
+            }
+        });
+    }
 }
 
 function bindProducts(colelctionsResponse) {
@@ -312,19 +323,23 @@ function bindProducts(colelctionsResponse) {
 
                 if (addProduct) {
                     var barcode = this.barCode;
-                    
-                    var displayFrom = barcode.substring(barcode.indexOf("displayFrom"));
-                    if (displayFrom.indexOf(";") >= 0)
-                        displayFrom = displayFrom.substring(0, displayFrom.indexOf(";"));
+                    var displayFrom = "";
+                    var displayTo = "";
+                    if (barcode.indexOf("displayFrom") >= 0) {
+                        displayFrom = barcode.substring(barcode.indexOf("displayFrom"));
+                        if (displayFrom.indexOf(";") >= 0)
+                            displayFrom = displayFrom.substring(0, displayFrom.indexOf(";"));
+                        displayFrom = displayFrom.split(':')[1].split(',').toString().trim();
+                    }
 
-                    var displayTo = barcode.substring(barcode.indexOf("displayTo"));
-                    if (displayTo.indexOf(";") >= 0)
-                        displayTo = displayTo.substring(0, displayTo.indexOf(";"));
+                    if (barcode.indexOf("displayTo") >= 0) {
+                        var displayTo = barcode.substring(barcode.indexOf("displayTo"));
+                        if (displayTo.indexOf(";") >= 0)
+                            displayTo = displayTo.substring(0, displayTo.indexOf(";"));
+                        displayTo = displayTo.split(':')[1].split(',').toString().trim();
+                    }
 
-                    displayFrom = displayFrom.split(':')[1].split(',').toString().trim();
-                    displayTo = displayTo.split(':')[1].split(',').toString().trim();
-                    debugger;
-                    if ((checkProductTime(displayFrom, displayTo)) || (displayFrom == "" || displayTo == "")) {
+                    if (checkProductTime(displayFrom, displayTo)) {
                         var tag1Image = "";
 
                         var barCodeAllergens = "";
@@ -452,12 +467,12 @@ function checkProductTime(displayFrom, displayTo) {
         var selectedTime = $(".selectTime option:eq(1)").val();
     }
 
-    if (selectedTime != null && selectedTime != 0) {
+    if (selectedTime != null && selectedTime != 0 && displayFrom != "" && displayTo != "") {
         selectedTime = selectedTime.toString().replace(":", "");
         if (selectedTime >= displayFrom && selectedTime <= displayTo)
-            return false;
-        else
             return true;
+        else
+            return false;
     }
     return true;
 }
@@ -501,101 +516,104 @@ function selectStore() {
 }
 
 function getCart() {
+    if (checkSession()) {
+        $.ajax({
+            url: apiURL + localStorage.getItem("userBrowserKey") + "/GetCart",
+            type: "POST",
+            dataType: "json",
+            data: {
+                sessionValue: localStorage.getItem("userBrowserKey")
+            },
+            crossDomain: true,
+            success: function (data) {
+                $(".table1").empty();
+                var _total = 0;
+                $.each(data.cart, function () {
+                    var extraItems = "";
+                    if (this.ExtraName != null && this.ExtraName != "")
+                        extraItems = this.ExtraName;
+                    else if (this.VariantTitle != null && this.VariantTitle != "")
+                        extraItems = this.VariantTitle;
 
-    $.ajax({
-        url: apiURL + "GetCart",
-        type: "POST",
-        dataType: "json",
-        data: {
-            sessionValue: localStorage.getItem("userBrowserKey")
-        },
-        crossDomain: true,
-        success: function (data) {
-            $(".table1").empty();
-            var _total = 0;
-            $.each(data.cart, function () {
-                var extraItems = "";
-                if (this.ExtraName != null && this.ExtraName != "")
-                    extraItems = this.ExtraName;
-                else if (this.VariantTitle != null && this.VariantTitle != "")
-                    extraItems = this.VariantTitle;
-
-                _total = _total + (parseFloat(this.price) + parseFloat(this.ExtraPrice));
+                    _total = _total + (parseFloat(this.price) + parseFloat(this.ExtraPrice));
+                    $(".table1").append("<tr>" +
+                          "<td align=\"left\" valign=\"middle\" style='padding-left:6px;vertical-align:top;'>" + this.qty + "</td>" +
+                          "<td align=\"left\" valign=\"middle\" style=\"word-break:break-all;\">" + this.title + "<br><span class='cartSubText'>" + extraItems + "</span></td>" +
+                          //"<td align=\"left\" valign=\"middle\">" + this.title + "</td>" +
+                          "<td align=\"left\" valign=\"middle\">$" + (parseFloat(this.price) + parseFloat(this.ExtraPrice)) + "</td>" +
+                          "<td align=\"left\" valign=\"middle\"><a onclick='removeCartItem(" + this.Id + ")' href=\"#\" class=\"remove_item\">(remove)</a></td>" +
+                      "</tr>");
+                });
+                sessionStorage.setItem("cartItems", data.cart.length);
                 $(".table1").append("<tr>" +
-                      "<td align=\"left\" valign=\"middle\">" + this.qty + "</td>" +
-                      "<td align=\"left\" valign=\"middle\" style=\"word-break:break-all;\">" + this.title + "<br><span class='cartSubText'>" + extraItems + "</span></td>" +
-                      //"<td align=\"left\" valign=\"middle\">" + this.title + "</td>" +
-                      "<td align=\"left\" valign=\"middle\">$" + (parseFloat(this.price) + parseFloat(this.ExtraPrice)) + "</td>" +
-                      "<td align=\"left\" valign=\"middle\"><a onclick='removeCartItem(" + this.Id + ")' href=\"#\" class=\"remove_item\">(remove)</a></td>" +
-                  "</tr>");
-            });
-            sessionStorage.setItem("cartItems", data.cart.length);
-            $(".table1").append("<tr>" +
-                      "<td align=\"left\" valign=\"middle\">&nbsp;</td>" +
-                      "<td align=\"left\" valign=\"middle\">TOTAL</td>" +
-                      "<td align=\"left\" valign=\"middle\">$" + _total + "</td>" +
-                      "<td align=\"left\" valign=\"middle\">&nbsp;</td>" +
-                  "</tr>");
+                          "<td align=\"left\" valign=\"middle\">&nbsp;</td>" +
+                          "<td align=\"left\" valign=\"middle\">TOTAL</td>" +
+                          "<td align=\"left\" valign=\"middle\">$" + _total + "</td>" +
+                          "<td align=\"left\" valign=\"middle\">&nbsp;</td>" +
+                      "</tr>");
 
-            if (data.cart.length <= 0) {
-                $("#cartSelectButton").click();
-                //message("<h1>Whoops!</h1>Cart is empty.");
+                if (data.cart.length <= 0) {
+                    $("#cartSelectButton").click();
+                    //message("<h1>Whoops!</h1>Cart is empty.");
+                }
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                message("<h1>Whoops!</h1>Something went wrong, please try again later.");
             }
-        },
-        error: function (jqXHR, textStatus, errorThrown) {
-            message("<h1>Whoops!</h1>Something went wrong, please try again later.");
-        }
-    });
+        });
+    }
 }
 
 function getOrderTypes() {
-    $.ajax({
-        url: apiURL + "GetOrderType",
-        type: "post",
-        data: {
-            StoreId: $(".selectStore").val()
-        },
-        dataType: "json",
-        crossDomain: true,
-        success: function (data) {
-            $("#orderType").empty();
-            var count = 0;
-            $.each(data, function () {
-                var checked = false;
-                if (count == 0)
-                    checked = true;
-                if (this.Status != "False") {
-                    if (checked) {
-                        $("#orderType").append('<div class="col-lg-6 col-md-6 col-sm-6 col-xs-12"><div class="form-row">' +
-                                '<input type="radio" id=' + this.OrderTypeEnum + ' name="radio-1-set" value=' + this.OrderTypeEnum + ' class="regular-radio" checked />' +
-                                '<label  for=' + this.OrderTypeEnum + '>' + this.OrderType + '</label>' +
-                            '</div></div>');
+    if (checkSession()) {
+        $.ajax({
+            url: apiURL + localStorage.getItem("userBrowserKey") + "/GetOrderType",
+            type: "post",
+            data: {
+                StoreId: $(".selectStore").val()
+            },
+            dataType: "json",
+            crossDomain: true,
+            success: function (data) {
+                $("#orderType").empty();
+                var count = 0;
+                $.each(data, function () {
+                    var checked = false;
+                    if (count == 0)
+                        checked = true;
+                    if (this.Status != "False") {
+                        if (checked) {
+                            $("#orderType").append('<div class="col-lg-6 col-md-6 col-sm-6 col-xs-12"><div class="form-row">' +
+                                    '<input type="radio" id=' + this.OrderTypeEnum + ' name="radio-1-set" value=' + this.OrderTypeEnum + ' class="regular-radio" checked />' +
+                                    '<label  for=' + this.OrderTypeEnum + '>' + this.OrderType + '</label>' +
+                                '</div></div>');
+                        }
+                        else {
+                            $("#orderType").append('<div class="col-lg-6 col-md-6 col-sm-6 col-xs-12"><div class="form-row">' +
+                                    '<input type="radio" id=' + this.OrderTypeEnum + ' name="radio-1-set" value=' + this.OrderTypeEnum + ' class="regular-radio" />' +
+                                    '<label for=' + this.OrderTypeEnum + '>' + this.OrderType + '</label>' +
+                                '</div></div>');
+                        }
                     }
                     else {
                         $("#orderType").append('<div class="col-lg-6 col-md-6 col-sm-6 col-xs-12"><div class="form-row">' +
-                                '<input type="radio" id=' + this.OrderTypeEnum + ' name="radio-1-set" value=' + this.OrderTypeEnum + ' class="regular-radio" />' +
-                                '<label for=' + this.OrderTypeEnum + '>' + this.OrderType + '</label>' +
-                            '</div></div>');
+                            '<input disabled="disabled" type="radio" id=' + this.OrderTypeEnum + ' name="radio-1-set" value=' + this.OrderTypeEnum + ' class="regular-radio" />' +
+                            '<label for=' + this.OrderTypeEnum + '>' + this.OrderType + '</label>' +
+                        '</div></div>');
                     }
-                }
-                else {
-                    $("#orderType").append('<div class="col-lg-6 col-md-6 col-sm-6 col-xs-12"><div class="form-row">' +
-                        '<input disabled="disabled" type="radio" id=' + this.OrderTypeEnum + ' name="radio-1-set" value=' + this.OrderTypeEnum + ' class="regular-radio" />' +
-                        '<label for=' + this.OrderTypeEnum + '>' + this.OrderType + '</label>' +
-                    '</div></div>');
-                }
-                count = count + 1;
-            });
+                    count = count + 1;
+                });
 
-            //if (count < 2)
-            //    $("#orderType").hide();
-            //else
-            //    $("#orderType").show();
-        },
-        error: function (jqXHR, textStatus, errorThrown) {
-            message("<h1>Whoops!</h1>Something went wrong, please try again later.");
-        }
-    });
+                //if (count < 2)
+                //    $("#orderType").hide();
+                //else
+                //    $("#orderType").show();
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                message("<h1>Whoops!</h1>Something went wrong, please try again later.");
+            }
+        });
+    }
 }
 
 function InitLocalStorage() {
@@ -623,7 +641,7 @@ function SaveDataToLocalStorage(data) {
 
 function loadproduct(productId) {
     if ($(".selectStore").val() == '' || $(".selectStore").val() == '0') {
-        
+
         $(".selectStore").addClass("validation");
         setTimeout(function () {
             $('.selectStore').removeClass("validation");
@@ -635,10 +653,10 @@ function loadproduct(productId) {
     else {
         $("#divAddtocart").empty();
         $("#divAddtocartButton").empty();
-        
+
         $("#productFeatureModal").empty();
         localStorage.removeItem("steptext");
-        
+
         var data = [];
         // Parse the serialized data back into an array of objects
         data = JSON.parse(localStorage.getItem('productCollection'));
@@ -749,7 +767,7 @@ function loadproduct(productId) {
                 $(".add_item li").click(function () {
                     $(this).parent("ul").find(".card").removeClass("open_close");
                     $(this).find(".card").toggleClass("open_close");
-                    
+
                     $(this).parent("ul").find(".prodImg").removeClass("open_close_img");
                     $(this).find(".prodImg").toggleClass("open_close_img");
                 });
@@ -757,7 +775,7 @@ function loadproduct(productId) {
             $("#addvarianttoCart").show();
 
             $(".add_item li").click(function () {
-                
+
                 $(this).find(".added_overlay").toggleClass("open_close");
             });
         }
@@ -766,7 +784,7 @@ function loadproduct(productId) {
             $(this).text('ADDED!').addClass('active');
             //$(this).parent().parent().find('.anyExtra').show();
         });
-        
+
     }
 }
 
@@ -812,7 +830,7 @@ function loadExtrasExtra(result) {
         $(this).find(".card").toggleClass("open_close");
         $(this).find(".prodImg").toggleClass("open_close_img");
     });
-    
+
 }
 
 function processImage(img) {
@@ -831,7 +849,7 @@ function addvariantExtrastocart() {
     });
     var validSteps = true;
     $("#variantSteps > .productList").each(function () {
-        debugger;
+
         var op = $(this).find(".open_close");
         if (op.length <= 0)
             validSteps = false;
@@ -847,39 +865,40 @@ function addvariantExtrastocart() {
             variantTitle: "",
             extras: extras
         }
+        if (checkSession()) {
+            $.ajax({
+                url: apiURL + localStorage.getItem("userBrowserKey") + "/AddCart",
+                type: "POST",
+                dataType: "json",
+                data: postData,
+                crossDomain: true,
+                success: function (data) {
 
-        $.ajax({
-            url: apiURL + "AddCart",
-            type: "POST",
-            dataType: "json",
-            data: postData,
-            crossDomain: true,
-            success: function (data) {
-                
-                if (!data.isSuccess && data.errorMessage.indexOf("BasketOverLimit") >= 0) {
-                    var maxOrderAmount = data.errorMessage.substring(data.errorMessage.indexOf("#") + 1);
-                    window.location.href = "#menupage";
-                    messageReqButtonClick("<h1>WE'RE SORRY</h1>Due to high demand at the moment we are accepting orders up to $" + maxOrderAmount + " only. If you have a larger order, please contact the store directly. Thank you!  <br> <button type='button' class='btnPopup'>OK, GOT IT!</button>");
-                    $(".close").click();
+                    if (!data.isSuccess && data.errorMessage.indexOf("BasketOverLimit") >= 0) {
+                        var maxOrderAmount = data.errorMessage.substring(data.errorMessage.indexOf("#") + 1);
+                        window.location.href = "#menupage";
+                        messageReqButtonClick("<h1>WE'RE SORRY</h1>Due to high demand at the moment we are accepting orders up to $" + maxOrderAmount + " only. If you have a larger order, please contact the store directly. Thank you!  <br> <button type='button' class='btnPopup'>OK, GOT IT!</button>");
+                        $(".close").click();
+                    }
+                    else {
+                        getCart();
+                        window.location.href = "#menupage";
+                        message('<img src="images/Untitled-1.png"/><h1>Boom</h1>Added to your order!');
+                        $(".close").click();
+                    }
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    message("<h1>Whoops!</h1>Something went wrong, please try again later.");
                 }
-                else {
-                    getCart();
-                    window.location.href = "#menupage";
-                    message('<img src="images/Untitled-1.png"/><h1>Boom</h1>Added to your order!');
-                    $(".close").click();
-                }
-            },
-            error: function (jqXHR, textStatus, errorThrown) {
-                message("<h1>Whoops!</h1>Something went wrong, please try again later.");
-            }
-        });
+            });
+        }
     }
     else
         messageReqButtonClick("<h1>HANG ON...</h1>You have to choose at least one from each step to proceed, please<button type='button' class='btnPopup'>OK, GOT IT!</button>");
 }
 
 function addvarianttocart() {
-    
+
     var _variantTitle = "";
     var variantSteps = localStorage.getItem("variantSteps");
     $.each($('.card.open_close'), function () {
@@ -888,58 +907,62 @@ function addvarianttocart() {
     });
     if (variantSteps == $('.card.open_close').length) {
         _variantTitle = _variantTitle.substring(0, _variantTitle.length - 1);
-        $.ajax({
-            url: apiURL + "GetVariantId",
-            type: "post",
-            data: {
-                ProductId: $("#mainProductId").val(),
-                Option1: _variantTitle
-            },
-            dataType: "json",
-            crossDomain: true,
-            success: function (data) {
-                var postData = {
-                    storeId: $(".selectStore").val(),
-                    time: $(".selectTime").val(),
-                    sessionValue: localStorage.getItem("userBrowserKey"),
-                    variantId: data.VariantId,
-                    qty: "1",
-                    variantTitle: _variantTitle
-                }
-                if (data == null || data.isSuccess == false) {
-                    message("<h1>Whoops!</h1>Invalid Combination.");
-                }
-                else {
-                    $.ajax({
-                        url: apiURL + "AddCart",
-                        type: "POST",
-                        dataType: "json",
-                        data: postData,
-                        crossDomain: true,
-                        success: function (data) {
-                            if (!data.isSuccess && data.errorMessage.indexOf("BasketOverLimit") >= 0) {
-                                var maxOrderAmount = data.errorMessage.substring(data.errorMessage.indexOf("#") + 1);
-                                window.location.href = "#menupage";
-                                messageReqButtonClick("<h1>WE'RE SORRY</h1>Due to high demand at the moment we are accepting orders up to $" + maxOrderAmount + " only. If you have a larger order, please contact the store directly. Thank you!  <br> <button type='button' class='btnPopup'>OK, GOT IT!</button>");
-                                $(".close").click();
-                            }
-                            else {
-                                getCart();
-                                window.location.href = "#menupage";
-                                message('<img src="images/Untitled-1.png"/><h1>Boom</h1>Added to your order!');
-                                $(".close").click();
-                            }
-                        },
-                        error: function (jqXHR, textStatus, errorThrown) {
-                            message("<h1>Whoops!</h1>Something went wrong, please try again later.");
+        if (checkSession()) {
+            $.ajax({
+                url: apiURL + localStorage.getItem("userBrowserKey") + "/GetVariantId",
+                type: "post",
+                data: {
+                    ProductId: $("#mainProductId").val(),
+                    Option1: _variantTitle
+                },
+                dataType: "json",
+                crossDomain: true,
+                success: function (data) {
+                    var postData = {
+                        storeId: $(".selectStore").val(),
+                        time: $(".selectTime").val(),
+                        sessionValue: localStorage.getItem("userBrowserKey"),
+                        variantId: data.VariantId,
+                        qty: "1",
+                        variantTitle: _variantTitle
+                    }
+                    if (data == null || data.isSuccess == false) {
+                        message("<h1>Whoops!</h1>Invalid Combination.");
+                    }
+                    else {
+                        if (checkSession()) {
+                            $.ajax({
+                                url: apiURL + localStorage.getItem("userBrowserKey") + "/AddCart",
+                                type: "POST",
+                                dataType: "json",
+                                data: postData,
+                                crossDomain: true,
+                                success: function (data) {
+                                    if (!data.isSuccess && data.errorMessage.indexOf("BasketOverLimit") >= 0) {
+                                        var maxOrderAmount = data.errorMessage.substring(data.errorMessage.indexOf("#") + 1);
+                                        window.location.href = "#menupage";
+                                        messageReqButtonClick("<h1>WE'RE SORRY</h1>Due to high demand at the moment we are accepting orders up to $" + maxOrderAmount + " only. If you have a larger order, please contact the store directly. Thank you!  <br> <button type='button' class='btnPopup'>OK, GOT IT!</button>");
+                                        $(".close").click();
+                                    }
+                                    else {
+                                        getCart();
+                                        window.location.href = "#menupage";
+                                        message('<img src="images/Untitled-1.png"/><h1>Boom</h1>Added to your order!');
+                                        $(".close").click();
+                                    }
+                                },
+                                error: function (jqXHR, textStatus, errorThrown) {
+                                    message("<h1>Whoops!</h1>Something went wrong, please try again later.");
+                                }
+                            });
                         }
-                    });
+                    }
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    message("<h1>Whoops!</h1>Something went wrong, please try again later.");
                 }
-            },
-            error: function (jqXHR, textStatus, errorThrown) {
-                message("<h1>Whoops!</h1>Something went wrong, please try again later.");
-            }
-        });
+            });
+        }
     }
     else
         messageReqButtonClick("<h1>HANG ON...</h1>You have to choose at least one to proceed, please<button type='button' class='btnPopup'>OK, GOT IT!</button>");
@@ -962,30 +985,32 @@ function addtocart() {
         variantTitle: "",
         extras: extras
     }
-    $.ajax({
-        url: apiURL + "AddCart",
-        type: "POST",
-        dataType: "json",
-        data: postData,
-        crossDomain: true,
-        success: function (data) {
-            if (!data.isSuccess && data.errorMessage.indexOf("BasketOverLimit") >= 0) {
-                var maxOrderAmount = data.errorMessage.substring(data.errorMessage.indexOf("#") + 1);
-                window.location.href = "#menupage";
-                messageReqButtonClick("<h1>WE'RE SORRY</h1>Due to high demand at the moment we are accepting orders up to $" + maxOrderAmount + " only. If you have a larger order, please contact the store directly. Thank you!  <br> <button type='button' class='btnPopup'>OK, GOT IT!</button>");
-                $(".close").click();
+    if (checkSession()) {
+        $.ajax({
+            url: apiURL + localStorage.getItem("userBrowserKey") + "/AddCart",
+            type: "POST",
+            dataType: "json",
+            data: postData,
+            crossDomain: true,
+            success: function (data) {
+                if (!data.isSuccess && data.errorMessage.indexOf("BasketOverLimit") >= 0) {
+                    var maxOrderAmount = data.errorMessage.substring(data.errorMessage.indexOf("#") + 1);
+                    window.location.href = "#menupage";
+                    messageReqButtonClick("<h1>WE'RE SORRY</h1>Due to high demand at the moment we are accepting orders up to $" + maxOrderAmount + " only. If you have a larger order, please contact the store directly. Thank you!  <br> <button type='button' class='btnPopup'>OK, GOT IT!</button>");
+                    $(".close").click();
+                }
+                else {
+                    getCart();
+                    window.location.href = "#menupage";
+                    message('<img src="images/Untitled-1.png"/><h1>Boom</h1>Added to your order!');
+                    $(".close").click();
+                }
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                message("<h1>Whoops!</h1>Something went wrong, please try again later.");
             }
-            else {
-                getCart();
-                window.location.href = "#menupage";
-                message('<img src="images/Untitled-1.png"/><h1>Boom</h1>Added to your order!');
-                $(".close").click();
-            }
-        },
-        error: function (jqXHR, textStatus, errorThrown) {
-            message("<h1>Whoops!</h1>Something went wrong, please try again later.");
-        }
-    });
+        });
+    }
 }
 
 function message(msg) {
@@ -1003,21 +1028,22 @@ function messageReqButtonClick(msg) {
 }
 
 function removeCartItem(cartItemId) {
-
-    $.ajax({
-        url: apiURL + "DeleteCartItem",
-        type: "DELETE",
-        dataType: "json",
-        data: "cartItemId=" + cartItemId,
-        crossDomain: true,
-        success: function (data) {
-            getCart();
-            message('<img src="images/Untitled-1.png"/><h1>Boom</h1>Item removed from cart.');
-        },
-        error: function (jqXHR, textStatus, errorThrown) {
-            message("<h1>Whoops!</h1>Something went wrong, please try again later.");
-        }
-    });
+    if (checkSession()) {
+        $.ajax({
+            url: apiURL + localStorage.getItem("userBrowserKey") + "/DeleteCartItem",
+            type: "DELETE",
+            dataType: "json",
+            data: "cartItemId=" + cartItemId,
+            crossDomain: true,
+            success: function (data) {
+                getCart();
+                message('<img src="images/Untitled-1.png"/><h1>Boom</h1>Item removed from cart.');
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                message("<h1>Whoops!</h1>Something went wrong, please try again later.");
+            }
+        });
+    }
 }
 
 
@@ -1034,15 +1060,15 @@ function initializeMapMarkers(pos, init, storeName, image, phoneNumber, openTime
             if (init == "2") {
                 //var distance = getDistanceFromLatLonInKm(targetpos.lat, targetpos.lng, pos.lat, pos.lng);
                 //if (distance <= 100) {
-                    $("#storeLocations").append("<p>" +
-                           "<img src=\"" + image + "\" alt=\"no img\">" +
-                           "<div class=\"locDes\">" +
-                               "<h3>" + storeName + "</h3>" +
-                               "<p>" + phoneNumber + " <br>" + openTimeText + "</p>" +
-                               "<input onclick='menupage(" + storeId + ",\"menupage\")' type=\"button\" value=\"START ORDER\" class=\"my_order locationOrder\" data-role=\"none\">" +
-                           "</div>");
+                $("#storeLocations").append("<p>" +
+                       "<img src=\"" + image + "\" alt=\"no img\">" +
+                       "<div class=\"locDes\">" +
+                           "<h3>" + storeName + "</h3>" +
+                           "<p>" + phoneNumber + " <br>" + openTimeText + "</p>" +
+                           "<input onclick='menupage(" + storeId + ",\"menupage\")' type=\"button\" value=\"START ORDER\" class=\"my_order locationOrder\" data-role=\"none\">" +
+                       "</div>");
 
-                    //displayMarkers(pos);
+                //displayMarkers(pos);
                 //}
             }
             else {
@@ -1146,63 +1172,65 @@ function menupage(storeId, pageName) {
 
 function getStoreDetails(pageName) {
     // Populate the time dropdown from the API
-    $.ajax({
-        url: apiURL + "GetStoreDetails",
-        type: "POST",
-        dataType: "json",
-        data: {
-            StoreId: $(".selectStore").val()
-        },
-        crossDomain: true,
-        success: function (data) {
+    if (checkSession()) {
+        $.ajax({
+            url: apiURL + localStorage.getItem("userBrowserKey") + "/GetStoreDetails",
+            type: "POST",
+            dataType: "json",
+            data: {
+                StoreId: $(".selectStore").val()
+            },
+            crossDomain: true,
+            success: function (data) {
 
-            if (isNaN(parseInt(data.storeDetails["OpenTime"], 10)) || isNaN(parseInt(data.storeDetails["CloseTime"], 10))) {
-                $(".selectTime").append($("<option>", { selected: true, value: "0", text: "Store Closed" }));
-                return;
-            }
-
-            var openTime = new Date();
-            openTime.setHours(data.storeDetails["OpenTime"].substr(0, 2), data.storeDetails["OpenTime"].substr(2, 2), 0, 0); // Set the opening time
-
-            var closeTime = new Date();
-            closeTime.setHours(data.storeDetails["CloseTime"].substr(0, 2), data.storeDetails["CloseTime"].substr(2, 2), 0, 0); // Set the closing time
-
-            var currentTime = new Date(); // Get the current time
-            var roundedCurrentTime = new Date(Math.ceil(currentTime.getTime() / 300000) * 300000); // Round current time up to the nearest 5 minutes
-
-            var timeSlot = new Date(Math.max(openTime, roundedCurrentTime)); // Set the first timeslot based on the opening time or current time, whichever is higher
-
-            // Create an array of times between opening/current and closing hours
-            while (timeSlot < closeTime) {
-                var time24 = ("0" + timeSlot.getHours()).substr(-2);// + ":" + ("0" + timeSlot.getMinutes()).substr(-2);
-                if (time24 == "00")
-                    time24 = "12" + ":" + ("0" + timeSlot.getMinutes()).substr(-2);
-                else
-                    time24 = time24 + ":" + ("0" + timeSlot.getMinutes()).substr(-2);
-
-                var time12 = ("0" + (timeSlot.getHours() > 11 ? timeSlot.getHours() - 12 : timeSlot.getHours())).substr(-2);// + ":" + ("0" + timeSlot.getMinutes()).substr(-2) + (timeSlot.getHours() > 11 ? " PM" : " AM");
-                if (time12 == "00")
-                    time12 = "12" + ":" + ("0" + timeSlot.getMinutes()).substr(-2) + (timeSlot.getHours() > 11 ? " PM" : " AM");
-                else
-                    time12 = time12 + ":" + ("0" + timeSlot.getMinutes()).substr(-2) + (timeSlot.getHours() > 11 ? " PM" : " AM");
-
-                if (timeSlot.getTime() === roundedCurrentTime.getTime()) {
-                    time24 = time12 = "ASAP"; // If the timeslot matches the rounded current time, rename it to ASAP
+                if (isNaN(parseInt(data.storeDetails["OpenTime"], 10)) || isNaN(parseInt(data.storeDetails["CloseTime"], 10))) {
+                    $(".selectTime").append($("<option>", { selected: true, value: "0", text: "Store Closed" }));
+                    return;
                 }
-                $(".selectTime").append($("<option>", { value: time24, text: time12 }));
-                timeSlot.setMinutes(timeSlot.getMinutes() + 5);
+
+                var openTime = new Date();
+                openTime.setHours(data.storeDetails["OpenTime"].substr(0, 2), data.storeDetails["OpenTime"].substr(2, 2), 0, 0); // Set the opening time
+
+                var closeTime = new Date();
+                closeTime.setHours(data.storeDetails["CloseTime"].substr(0, 2), data.storeDetails["CloseTime"].substr(2, 2), 0, 0); // Set the closing time
+
+                var currentTime = new Date(); // Get the current time
+                var roundedCurrentTime = new Date(Math.ceil(currentTime.getTime() / 300000) * 300000); // Round current time up to the nearest 5 minutes
+
+                var timeSlot = new Date(Math.max(openTime, roundedCurrentTime)); // Set the first timeslot based on the opening time or current time, whichever is higher
+
+                // Create an array of times between opening/current and closing hours
+                while (timeSlot < closeTime) {
+                    var time24 = ("0" + timeSlot.getHours()).substr(-2);// + ":" + ("0" + timeSlot.getMinutes()).substr(-2);
+                    if (time24 == "00")
+                        time24 = "12" + ":" + ("0" + timeSlot.getMinutes()).substr(-2);
+                    else
+                        time24 = time24 + ":" + ("0" + timeSlot.getMinutes()).substr(-2);
+
+                    var time12 = ("0" + (timeSlot.getHours() > 11 ? timeSlot.getHours() - 12 : timeSlot.getHours())).substr(-2);// + ":" + ("0" + timeSlot.getMinutes()).substr(-2) + (timeSlot.getHours() > 11 ? " PM" : " AM");
+                    if (time12 == "00")
+                        time12 = "12" + ":" + ("0" + timeSlot.getMinutes()).substr(-2) + (timeSlot.getHours() > 11 ? " PM" : " AM");
+                    else
+                        time12 = time12 + ":" + ("0" + timeSlot.getMinutes()).substr(-2) + (timeSlot.getHours() > 11 ? " PM" : " AM");
+
+                    if (timeSlot.getTime() === roundedCurrentTime.getTime()) {
+                        time24 = time12 = "ASAP"; // If the timeslot matches the rounded current time, rename it to ASAP
+                    }
+                    $(".selectTime").append($("<option>", { value: time24, text: time12 }));
+                    timeSlot.setMinutes(timeSlot.getMinutes() + 5);
+                }
+
+                if ($(".selectTime").size() == 0) $(".selectTime").append($("<option>", { selected: true, value: "0", text: "Store Closed" }));
+                if ($('select.selectTime option').length == 0) $(".selectTime").append($("<option>", { selected: true, value: "0", text: "Store Closed" }));
+
+                $(".currentSelectedStore").text($("#checkoutSelectStore :selected").text());
+                $(".currentSelectedTime").text($("#checkoutSelectStoreTime").val());
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                message("<h1>Whoops!</h1>Something went wrong, please try again later.");
             }
-
-            if ($(".selectTime").size() == 0) $(".selectTime").append($("<option>", { selected: true, value: "0", text: "Store Closed" }));
-            if ($('select.selectTime option').length == 0) $(".selectTime").append($("<option>", { selected: true, value: "0", text: "Store Closed" }));
-
-            $(".currentSelectedStore").text($("#checkoutSelectStore :selected").text());
-            $(".currentSelectedTime").text($("#checkoutSelectStoreTime").val());
-        },
-        error: function (jqXHR, textStatus, errorThrown) {
-            message("<h1>Whoops!</h1>Something went wrong, please try again later.");
-        }
-    });
+        });
+    }
     window.location.href = "#" + pageName;
 }
 

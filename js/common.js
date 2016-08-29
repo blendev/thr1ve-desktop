@@ -119,49 +119,51 @@ $(document).ready(function () {
                 "EmailAddress": $("#customerEmailAddress").val(),
                 "Password": $("#customerPassword").val()
             };
-            $.ajax({
-                url: apiURL + "GetCustomerDetails",
-                type: "POST",
-                dataType: "json",
-                data: JSONObject,
-                crossDomain: true,
-                success: function (data) {
-                    //localStorage.setItem("storeList", JSON.stringify(data.stores));
+            if (checkSession()) {
+                $.ajax({
+                    url: apiURL + localStorage.getItem("userBrowserKey") + "/GetCustomerDetails",
+                    type: "POST",
+                    dataType: "json",
+                    data: JSONObject,
+                    crossDomain: true,
+                    success: function (data) {
+                        //localStorage.setItem("storeList", JSON.stringify(data.stores));
 
-                    if (data.Customer == undefined || data.Customer == null) {
-                        message("<h1>Whoops!</h1>Unable to log in, username or password incorrect. Please check your details and try again.");
+                        if (data.Customer == undefined || data.Customer == null) {
+                            message("<h1>Whoops!</h1>Unable to log in, username or password incorrect. Please check your details and try again.");
+                        }
+                        else {
+                            var customerDetails = data.Customer;
+                            localStorage.setItem("customerNewId1", customerDetails.Id);
+
+                            localStorage.setItem("customerfirstName1", customerDetails.first_name);
+                            localStorage.setItem("customerlastName1", customerDetails.last_name);
+                            localStorage.setItem("customerEmailAddress1", customerDetails.email);
+                            localStorage.setItem("customerphoneNumber", customerDetails.phoneNumber);
+
+                            $("#firstName").val(customerDetails.first_name);
+                            $("#lastName").val(customerDetails.last_name);
+                            $("#emailAddress").val(customerDetails.email);
+                            $("#phoneNumber").val(customerDetails.phoneNumber);
+                            $("#returncustomerEmailAddress").val(customerDetails.email);
+                            $("#returncustomerForm").show();
+                            $("#dvLogout").show();
+
+                            var formElement = '<form id="checkout-form">' +
+                               '<input type="submit" style="margin-left:30%;" class="btnAddtoCart" value="PLACE ORDER">' +
+                           '</form>';
+                            $("#dropin-container").after(formElement);
+
+                            $("#customerLoginForm").hide();
+                            $("#dvLogin").hide();
+                            returnCustomerToken();
+                        }
+                    },
+                    error: function (jqXHR, textStatus, errorThrown) {
+                        message("<h1>Whoops!</h1>Customer not exist.");
                     }
-                    else {
-                        var customerDetails = data.Customer;
-                        localStorage.setItem("customerNewId1", customerDetails.Id);
-
-                        localStorage.setItem("customerfirstName1", customerDetails.first_name);
-                        localStorage.setItem("customerlastName1", customerDetails.last_name);
-                        localStorage.setItem("customerEmailAddress1", customerDetails.email);
-                        localStorage.setItem("customerphoneNumber", customerDetails.phoneNumber);
-
-                        $("#firstName").val(customerDetails.first_name);
-                        $("#lastName").val(customerDetails.last_name);
-                        $("#emailAddress").val(customerDetails.email);
-                        $("#phoneNumber").val(customerDetails.phoneNumber);
-                        $("#returncustomerEmailAddress").val(customerDetails.email);
-                        $("#returncustomerForm").show();
-                        $("#dvLogout").show();
-
-                        var formElement = '<form id="checkout-form">' +
-                           '<input type="submit" style="margin-left:30%;" class="btnAddtoCart" value="PLACE ORDER">' +
-                       '</form>';
-                        $("#dropin-container").after(formElement);
-
-                        $("#customerLoginForm").hide();
-                        $("#dvLogin").hide();
-                        returnCustomerToken();
-                    }
-                },
-                error: function (jqXHR, textStatus, errorThrown) {
-                    message("<h1>Whoops!</h1>Customer not exist.");
-                }
-            });
+                });
+            }
         }
     });
 
@@ -248,75 +250,80 @@ $(document).ready(function () {
 });
 
 function newCustomerToken() {
-    $.ajax({
-        url: apiURL + "GetClientAccessToken",
-        type: "GET",
-        dataType: "json",
-        crossDomain: true,
-        success: function (data) {
-            $("#dropin-container").empty();
-            $("#dropin-container").next('form').remove();
-            var formElement = '<form id="checkout-form">' +
-                   '<input type="submit" class="my_order" value="PLACE ORDER">' +
-               '</form>';
-            $("#dropin-container").after(formElement);
-            braintree.setup(data.clientToken, 'dropin', {
-                container: 'dropin-container',
-                form: 'checkout-form',
-                paypal: {
-                    singleUse: false, // Required
-                    currency: 'AUD',
-                    button: {
-                        type: 'checkout'
+    if (checkSession()) {
+        $.ajax({
+            url: apiURL + localStorage.getItem("userBrowserKey") + "/GetClientAccessToken",
+            type: "GET",
+            dataType: "json",
+            crossDomain: true,
+            success: function (data) {
+                $("#dropin-container").empty();
+                $("#dropin-container").next('form').remove();
+                var formElement = '<form id="checkout-form">' +
+                       '<input type="submit" class="my_order" value="PLACE ORDER">' +
+                   '</form>';
+                $("#dropin-container").after(formElement);
+                braintree.setup(data.clientToken, 'dropin', {
+                    container: 'dropin-container',
+                    form: 'checkout-form',
+                    paypal: {
+                        singleUse: false, // Required
+                        currency: 'AUD',
+                        button: {
+                            type: 'checkout'
+                        }
+                    },
+                    onPaymentMethodReceived: function (nonce) {
+                        debugger;
+                        //placeOrder(nonce, 0);
                     }
-                },
-                onPaymentMethodReceived: function (nonce) {
-                    placeOrder(nonce, 0);
-                }
-            });
-        },
-        error: function (jqXHR, textStatus, errorThrown) {
-            //alert(textStatus + "; " + errorThrown);
-        }
-    });
+                });
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                //alert(textStatus + "; " + errorThrown);
+            }
+        });
+    }
 }
 
 function returnCustomerToken() {
     var JSONObject = {
         "CustomerId": localStorage.getItem("customerNewId1")
     };
-    $.ajax({
-        url: apiURL + "GetClientAccessToken",
-        type: "POST",
-        dataType: "json",
-        data: JSONObject,
-        crossDomain: true,
-        success: function (data) {
-            $("#dropin-container").empty();
-            $("#dropin-container").next('form').remove();
-            var formElement = '<form id="checkout-form">' +
-                   '<input type="submit" class="my_order" value="PLACE ORDER">' +
-               '</form>';
-            $("#dropin-container").after(formElement);
-            braintree.setup(data.clientToken, 'dropin', {
-                container: 'dropin-container',
-                form: 'checkout-form',
-                paypal: {
-                    singleUse: false, // Required
-                    currency: 'AUD',
-                    button: {
-                        type: 'checkout'
+    if (checkSession()) {
+        $.ajax({
+            url: apiURL + localStorage.getItem("userBrowserKey") + "/GetClientAccessToken",
+            type: "POST",
+            dataType: "json",
+            data: JSONObject,
+            crossDomain: true,
+            success: function (data) {
+                $("#dropin-container").empty();
+                $("#dropin-container").next('form').remove();
+                var formElement = '<form id="checkout-form">' +
+                       '<input type="submit" class="my_order" value="PLACE ORDER">' +
+                   '</form>';
+                $("#dropin-container").after(formElement);
+                braintree.setup(data.clientToken, 'dropin', {
+                    container: 'dropin-container',
+                    form: 'checkout-form',
+                    paypal: {
+                        singleUse: false, // Required
+                        currency: 'AUD',
+                        button: {
+                            type: 'checkout'
+                        }
+                    },
+                    onPaymentMethodReceived: function (nonce) {
+                        //placeOrder(nonce, 1);
                     }
-                },
-                onPaymentMethodReceived: function (nonce) {
-                    placeOrder(nonce, 1);
-                }
-            });
-        },
-        error: function (jqXHR, textStatus, errorThrown) {
-            //alert(textStatus + "; " + errorThrown);
-        }
-    });
+                });
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                //alert(textStatus + "; " + errorThrown);
+            }
+        });
+    }
 }
 
 function placeOrder(nonce, repeatCustomer) {
@@ -376,87 +383,89 @@ function placeOrder(nonce, repeatCustomer) {
             localStorage.setItem("customerEmailAddress", $("#emailAddress").val());
             localStorage.setItem("customerphoneNumber", $("#phoneNumber").val());
         }
-        $.ajax({
-            url: apiURL + "PlaceOrder",
-            type: "POST",
-            dataType: "json",
-            data: JSONObject,
-            crossDomain: true,
-            success: function (data) {
-                if (!data.OrderSuccess) {
-                    $('.popup_choose_ur_base').remove();
-                    if (data.orderDetails == undefined || data.orderDetails == null || data.orderDetails.BraintreeStatus == null || data.orderDetails.BraintreeStatus == undefined) {
-                        messageReqButtonClick("<h1>Whoops!</h1>Unable to send order to store, Something went wrong, please try again later.<br><button type='button' class='btnPopup'>OK, GOT IT!</button>");
-                    }
-                    else if (data.orderDetails.BraintreeStatus == "customer already exist.") {
-                        message("<h1>Whoops!</h1>Customer email already exist.");
-                        $("#personalDetailsInner").show();
-                        $("#customerLoginForm").hide();
-                        $("#returncustomerForm").hide();
-                        $("#dvLogout").hide();
-                    }
-                    else if (data.orderDetails.BraintreeStatus == "Payment Success")
-                        messageReqButtonClick("<h1>HANG ON...</h1>We can't reach the store right now, please try again later! Your payment has been voided, any pending transactions in your bank account will disappear within 72 hours.<br><button type='button' class='btnPopup'>OK, GOT IT!</button>");
-                    else if (data.orderDetails.BraintreeStatus.indexOf("payment_method_nonce does not contain a valid payment instrument type.") >= 0)
-                        messageReqButtonClick("<h1>HANG ON...</h1> We’re sorry, THR1VE does not currently accept AMEX. We are working on having this resolved soon!<br><button type='button' class='btnPopup'>OK, GOT IT!</button>");
-                    else if (data.orderDetails.BraintreeStatus.indexOf("Nonce") < 0)
-                        messageReqButtonClick("<h1>HANG ON...</h1>We weren't able to process your payment. Please check your details and try again.<br><button type='button' class='btnPopup'>OK, GOT IT!</button>");
+        if (checkSession()) {
+            $.ajax({
+                url: apiURL + localStorage.getItem("userBrowserKey") + "/PlaceOrder",
+                type: "POST",
+                dataType: "json",
+                data: JSONObject,
+                crossDomain: true,
+                success: function (data) {
+                    if (!data.OrderSuccess) {
+                        $('.popup_choose_ur_base').remove();
+                        if (data.orderDetails == undefined || data.orderDetails == null || data.orderDetails.BraintreeStatus == null || data.orderDetails.BraintreeStatus == undefined) {
+                            messageReqButtonClick("<h1>Whoops!</h1>Unable to send order to store, Something went wrong, please try again later.<br><button type='button' class='btnPopup'>OK, GOT IT!</button>");
+                        }
+                        else if (data.orderDetails.BraintreeStatus == "customer already exist.") {
+                            message("<h1>Whoops!</h1>Customer email already exist.");
+                            $("#personalDetailsInner").show();
+                            $("#customerLoginForm").hide();
+                            $("#returncustomerForm").hide();
+                            $("#dvLogout").hide();
+                        }
+                        else if (data.orderDetails.BraintreeStatus == "Payment Success")
+                            messageReqButtonClick("<h1>HANG ON...</h1>We can't reach the store right now, please try again later! Your payment has been voided, any pending transactions in your bank account will disappear within 72 hours.<br><button type='button' class='btnPopup'>OK, GOT IT!</button>");
+                        else if (data.orderDetails.BraintreeStatus.indexOf("payment_method_nonce does not contain a valid payment instrument type.") >= 0)
+                            messageReqButtonClick("<h1>HANG ON...</h1> We’re sorry, THR1VE does not currently accept AMEX. We are working on having this resolved soon!<br><button type='button' class='btnPopup'>OK, GOT IT!</button>");
+                        else if (data.orderDetails.BraintreeStatus.indexOf("Nonce") < 0)
+                            messageReqButtonClick("<h1>HANG ON...</h1>We weren't able to process your payment. Please check your details and try again.<br><button type='button' class='btnPopup'>OK, GOT IT!</button>");
 
-                    if (localStorage.getItem("customerNewId1") == null) {
-                        newCustomerToken();
-                    }
-                    else {
-                        $("#returnmember").prop('checked', 'checked');
-                        returnCustomerToken();
-                    }
-                }
-                else {
-
-                    if (($("#rememberme").is(":checked")) && (data.customerId != null && data.customerId != undefined && data.customerId != "")) {
-                        localStorage.setItem("customerNewId1", data.customerId);
-                        localStorage.setItem("customerfirstName", data.firstName);
-                        localStorage.setItem("customerlastName", data.lastName);
-                        localStorage.setItem("customerEmailAddress", data.emailAddress);
-                        localStorage.setItem("customerphoneNumber", data.phone);
+                        if (localStorage.getItem("customerNewId1") == null) {
+                            newCustomerToken();
+                        }
+                        else {
+                            $("#returnmember").prop('checked', 'checked');
+                            returnCustomerToken();
+                        }
                     }
                     else {
-                        localStorage.removeItem("customerNewId1");
-                        localStorage.removeItem("customerfirstName");
-                        localStorage.removeItem("customerlastName");
-                        localStorage.removeItem("customerEmailAddress");
-                        localStorage.removeItem("customerphoneNumber");
+
+                        if (($("#rememberme").is(":checked")) && (data.customerId != null && data.customerId != undefined && data.customerId != "")) {
+                            localStorage.setItem("customerNewId1", data.customerId);
+                            localStorage.setItem("customerfirstName", data.firstName);
+                            localStorage.setItem("customerlastName", data.lastName);
+                            localStorage.setItem("customerEmailAddress", data.emailAddress);
+                            localStorage.setItem("customerphoneNumber", data.phone);
+                        }
+                        else {
+                            localStorage.removeItem("customerNewId1");
+                            localStorage.removeItem("customerfirstName");
+                            localStorage.removeItem("customerlastName");
+                            localStorage.removeItem("customerEmailAddress");
+                            localStorage.removeItem("customerphoneNumber");
+                        }
+                        $(".popup_sec1").hide("slow");
+
+                        var storesList = JSON.parse(localStorage.getItem("storeList"));
+                        storesList = $.grep(storesList, function (element, index) {
+                            return element.StoreId == $("#checkoutSelectStore").val();
+                        });
+                        var _PhoneNumber = storesList[0].PhoneNumber;
+
+                        $("#orderNumber").text(data.orderNumber);
+
+                        $("#orderStore").text($("#checkoutSelectStore :selected").text());
+                        $("#orderTime").text($(".selectTime").val());
+                        if ($("#emailAddress").val() != null && $("#emailAddress").val() != "")
+                            $("#orderEmail").text($("#emailAddress").val());
+
+                        $("#storePhoneNumber").text(_PhoneNumber);
+
+                        $(".popup_sec1").hide("slow");
+                        $(".popup_sec2").toggle("slow");
+                        $("body").removeClass("loading");
+                        resetCart();
                     }
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    if ($("body").hasClass("loading")) $("body").removeClass("loading"); // Hide spinning wheel when ajax query is finished
                     $(".popup_sec1").hide("slow");
-
-                    var storesList = JSON.parse(localStorage.getItem("storeList"));
-                    storesList = $.grep(storesList, function (element, index) {
-                        return element.StoreId == $("#checkoutSelectStore").val();
-                    });
-                    var _PhoneNumber = storesList[0].PhoneNumber;
-
-                    $("#orderNumber").text(data.orderNumber);
-
-                    $("#orderStore").text($("#checkoutSelectStore :selected").text());
-                    $("#orderTime").text($(".selectTime").val());
-                    if ($("#emailAddress").val() != null && $("#emailAddress").val() != "")
-                        $("#orderEmail").text($("#emailAddress").val());
-
-                    $("#storePhoneNumber").text(_PhoneNumber);
-
-                    $(".popup_sec1").hide("slow");
-                    $(".popup_sec2").toggle("slow");
-                    $("body").removeClass("loading");
+                    $(".popup_sec2").hide("slow");
                     resetCart();
+                    messageReqButtonClick("<h1>Whoops!</h1>Unable to send order to store, Something went wrong, please try again later.<br><button type='button' class='btnPopup'>OK, GOT IT!</button>");
                 }
-            },
-            error: function (jqXHR, textStatus, errorThrown) {
-                if ($("body").hasClass("loading")) $("body").removeClass("loading"); // Hide spinning wheel when ajax query is finished
-                $(".popup_sec1").hide("slow");
-                $(".popup_sec2").hide("slow");
-                resetCart();
-                messageReqButtonClick("<h1>Whoops!</h1>Unable to send order to store, Something went wrong, please try again later.<br><button type='button' class='btnPopup'>OK, GOT IT!</button>");
-            }
-        });
+            });
+        }
     }
 }
 
@@ -471,7 +480,7 @@ function resetCart() {
     selectNearestStore($(".selectStore").val());
     sessionStorage.setItem("cartItems", 0);
 
-    localStorage.setItem("userBrowserKey", createSession(false));
+    createSession(false);
 }
 
 function message(msg) {
@@ -498,4 +507,14 @@ function changeStore() {
 function changeStoreDone() {
     $(".changeStore").show();
     $(".changeStoreSelect").hide();
+}
+
+function checkSession() {
+    if (localStorage.getItem("userBrowserKey") == null || localStorage.getItem("userBrowserKey") == "") {
+        window.location.href = "#indexpage";
+        createSession(false);
+        messageReqButtonClick("<h1>Whoops!</h1>Session expired, please start your order again.");
+        return false;
+    }
+    return true;
 }

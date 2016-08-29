@@ -111,11 +111,28 @@
 		width:100%;
 		margin:0;
 	}
+    footer {
+    position: relative;
+    width: 100%;
+    padding: 15px 0;
+    z-index: 100;
+    color: #444;
+    margin-left:5%;
+}
 	
 }
 
 /* SMART PHONE LANDSCAPE PART */
 @media screen and (min-width:321px) and (max-width:479px){
+
+footer {
+    position: relative;
+    width: 100%;
+    padding: 15px 0;
+    z-index: 100;
+    color: #444;
+    margin-left:5%;
+}
 	
 	/* modal */
 	
@@ -251,7 +268,12 @@
 		width:100%;
 		margin:0;
 	}
+	.logo{position:relative}
+}
+
+@media screen and (max-width:1279px){
 	
+.logo{position:relative}
 }
 @media screen and (max-width:1023px){
 	h1, h2, h3, h4, h5, h6{line-height:18px;}
@@ -265,11 +287,20 @@
 }
 .modal-content-before{ position:relative; width:100%;}
 #MenuSelect .modal-content{ padding:0 ;}
+.logo{position:relative}
 }
 @media screen and (max-width:767px){
+
 	.productList{ padding:0 10px;}
 .productList ul li{ width:50%}
+footer{ margin-left:0; text-align:center;}
+.logo{left:0; top:0}
 }
 @media screen and (max-width:479px){
+
+	.nav > ul > li{ font-size:11px!important; margin:0 10px 10px!important; display:block;}
+		.nav > ul.changeStore > li{ margin:0!important;}
+	.nav > ul > li select{ display:block!important; width:100%; !important}
 .productList ul li{ width:100%}
+.wraper_header .container{padding-left:0!important; padding-right:0!important;}
 }
