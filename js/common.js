@@ -202,6 +202,7 @@ $(document).ready(function () {
                         $("#phoneNumber").val(localStorage.getItem("customerphoneNumber"));
                         $("#returncustomerEmailAddress").val(localStorage.getItem("customerEmailAddress"));
                         $("#returncustomerForm").show();
+                        $("#dvLogout").show();
                     }
                     returnCustomerToken();
                 }
@@ -275,7 +276,7 @@ function newCustomerToken() {
                     },
                     onPaymentMethodReceived: function (nonce) {
                         debugger;
-                        //placeOrder(nonce, 0);
+                        placeOrder(nonce, 0);
                     }
                 });
             },
@@ -315,7 +316,7 @@ function returnCustomerToken() {
                         }
                     },
                     onPaymentMethodReceived: function (nonce) {
-                        //placeOrder(nonce, 1);
+                        placeOrder(nonce, 1);
                     }
                 });
             },
@@ -371,7 +372,7 @@ function placeOrder(nonce, repeatCustomer) {
         else if ($("#rememberme").is(":checked"))
             cusId = 0;
         var JSONObject = {
-            "orderShopify": false, "sessionValue": localStorage.getItem("userBrowserKey"), "storeId": $("#checkoutSelectStore").val(), "storeName": $("#checkoutSelectStore :selected").text(),
+            "orderShopify": false, "storeId": $("#checkoutSelectStore").val(), "storeName": $("#checkoutSelectStore :selected").text(),
             "time": $(".selectTime").val(), "nonce": nonce.nonce,
             "Customer": { "email": $("#emailAddress").val(), "first_name": $("#firstName").val(), "last_name": $("#lastName").val(), "phoneNumber": $("#phoneNumber").val(), "password": $("#password").val() },
             "customerId": cusId, "paymentToken": null, "orderType": selOrderType

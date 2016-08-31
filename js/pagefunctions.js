@@ -147,7 +147,7 @@ $(document).ready(function () {
             }
         }
 
-        selectNearestStore($(".selectStore").val());
+        //selectNearestStore($(".selectStore").val());
         // *** Update session
 
     });
@@ -177,7 +177,7 @@ function createSession(refreshStores) {
     }
 
     $.ajax({
-        url: apiURL + "session",
+        url: apiURL + "StartSession",
         type: "POST",
         dataType: "json",
         data: postData,
@@ -207,7 +207,6 @@ function createSession(refreshStores) {
                                         lng: _Longitude
                                     };
                                     initializeMapMarkers(pos, "2", this["StoreName"], this["Image"], this["PhoneNumber"], this["OpenTimeText"], this["StoreId"]);
-                                    //displayMarkers(pos);
                                 }
                             });
                             selectStore();
@@ -519,11 +518,8 @@ function getCart() {
     if (checkSession()) {
         $.ajax({
             url: apiURL + localStorage.getItem("userBrowserKey") + "/GetCart",
-            type: "POST",
+            type: "GET",
             dataType: "json",
-            data: {
-                sessionValue: localStorage.getItem("userBrowserKey")
-            },
             crossDomain: true,
             success: function (data) {
                 $(".table1").empty();
@@ -859,7 +855,6 @@ function addvariantExtrastocart() {
         var postData = {
             storeId: $(".selectStore").val(),
             time: $(".selectTime").val(),
-            sessionValue: localStorage.getItem("userBrowserKey"),
             variantId: $("#mainVariantId").val(),
             qty: "1",
             variantTitle: "",
@@ -921,7 +916,6 @@ function addvarianttocart() {
                     var postData = {
                         storeId: $(".selectStore").val(),
                         time: $(".selectTime").val(),
-                        sessionValue: localStorage.getItem("userBrowserKey"),
                         variantId: data.VariantId,
                         qty: "1",
                         variantTitle: _variantTitle
@@ -979,7 +973,6 @@ function addtocart() {
     var postData = {
         storeId: $(".selectStore").val(),
         time: $(".selectTime").val(),
-        sessionValue: localStorage.getItem("userBrowserKey"),
         variantId: $("#mainVariantId").val(),
         qty: "1",
         variantTitle: "",
@@ -1044,112 +1037,6 @@ function removeCartItem(cartItemId) {
             }
         });
     }
-}
-
-
-
-var map;
-function initializeMapMarkers(pos, init, storeName, image, phoneNumber, openTimeText, storeId) {
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(function (position) {
-            var targetpos = {
-                lat: position.coords.latitude,
-                lng: position.coords.longitude
-            };
-
-            if (init == "2") {
-                //var distance = getDistanceFromLatLonInKm(targetpos.lat, targetpos.lng, pos.lat, pos.lng);
-                //if (distance <= 100) {
-                $("#storeLocations").append("<p>" +
-                       "<img src=\"" + image + "\" alt=\"no img\">" +
-                       "<div class=\"locDes\">" +
-                           "<h3>" + storeName + "</h3>" +
-                           "<p>" + phoneNumber + " <br>" + openTimeText + "</p>" +
-                           "<input onclick='menupage(" + storeId + ",\"menupage\")' type=\"button\" value=\"START ORDER\" class=\"my_order locationOrder\" data-role=\"none\">" +
-                       "</div>");
-
-                //displayMarkers(pos);
-                //}
-            }
-            else {
-                locationName(position.coords.latitude, position.coords.longitude);
-                map.setCenter(targetpos);
-            }
-        }, function () {
-            //handleLocationError(true, infoWindow, map.getCenter());
-        });
-    } else {
-        // Browser doesn't support Geolocation
-        //handleLocationError(false, infoWindow, map.getCenter());
-    }
-}
-
-function initMap() {
-    map = new google.maps.Map(document.getElementById('map'), {
-        center: { lat: -34.397, lng: 150.644 },
-        zoom: 10
-    });
-
-    $('body').mouseover(function () {
-        google.maps.event.trigger(map, 'resize');
-    });
-}
-
-function handleLocationError(browserHasGeolocation, infoWindow, pos) {
-
-    infoWindow.setPosition(pos);
-    infoWindow.setContent(browserHasGeolocation ?
-                          'Error: The Geolocation service failed.' :
-                          'Error: Your browser doesn\'t support geolocation.');
-}
-
-function displayMarkers(pos) {
-
-    var image = 'images/thr1velocation.png';
-    var beachMarker = new google.maps.Marker({
-        position: { lat: pos.lat, lng: pos.lng },
-        map: map,
-        icon: image
-    });
-    beachMarker.setMap(map);
-}
-
-function locationName(latitude, longitude) {
-    var geocoder;
-    geocoder = new google.maps.Geocoder();
-    var latlng = new google.maps.LatLng(latitude, longitude);
-
-    geocoder.geocode(
-        { 'latLng': latlng },
-        function (results, status) {
-            if (status == google.maps.GeocoderStatus.OK) {
-                if (results[0]) {
-                    var add = results[0].formatted_address;
-                    var value = add.split(",");
-
-                    count = value.length;
-                    country = value[count - 1];
-                    state = value[count - 2];
-                    city = value[count - 3];
-                    $("#locationHeader").show();
-                    $("#currentCity").show();
-
-                    if (city != "")
-                        $("#currentCity").text(city);
-                    else {
-                        $("#locationHeader").hide();
-                        $("#currentCity").hide();
-                    }
-                }
-                else {
-                    message("<h1>Whoops!</h1>Address not found.");
-                }
-            }
-            else {
-                message("<h1>Whoops!</h1>Geocoder failed due to:" + status);
-            }
-        }
-    );
 }
 
 function menupage(storeId, pageName) {
@@ -1232,71 +1119,6 @@ function getStoreDetails(pageName) {
         });
     }
     window.location.href = "#" + pageName;
-}
-
-function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
-
-    var R = 6371; // Radius of the earth in km
-    var dLat = deg2rad(lat2 - lat1);  // deg2rad below
-    var dLon = deg2rad(lon2 - lon1);
-    var a =
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
-      Math.sin(dLon / 2) * Math.sin(dLon / 2)
-    ;
-    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    var d = R * c; // Distance in km
-
-    return d;
-}
-
-function deg2rad(deg) {
-    return deg * (Math.PI / 180)
-}
-
-
-function selectNearestStore(storeId) {
-    //window.location.href = "#locationspage";
-    var nearestStore;
-    var prevDistance = 0;
-    var storesList = JSON.parse(localStorage.getItem("storeList"));
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(function (position) {
-            var targetpos = {
-                lat: position.coords.latitude,
-                lng: position.coords.longitude
-            };
-            if (storeId != 0 && storeId != -1) {
-
-                storesList = $.grep(storesList, function (element, index) {
-                    return element.StoreId == storeId;
-                });
-            }
-
-            $.each(storesList, function () {
-                var _Latitude = this["Latitude"];
-                var _Longitude = this["Longitude"];
-                var distance = getDistanceFromLatLonInKm(targetpos.lat, targetpos.lng, _Latitude, _Longitude);
-
-                if (prevDistance == 0 || distance < prevDistance) {
-                    prevDistance = distance;
-                    nearestStore = this;
-                }
-            });
-            $("#divJog").hide();
-            if (prevDistance > 5)
-                $("#divJog").show();
-            if (storeId == 0) {
-                $(".selectStore").val(nearestStore.StoreId);
-                menupage(nearestStore.StoreId, "menupage");
-            }
-            if (storeId == -1) {
-                $(".selectStore").val(nearestStore.StoreId);
-                menupage(nearestStore.StoreId, "locationspage");
-
-            }
-        });
-    }
 }
 
 function privacy() {
