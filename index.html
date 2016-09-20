@@ -25,7 +25,7 @@
     <script type="text/javascript" src="js/session.js"></script>
     <script src="js/easyResponsiveTabs.js" type="text/javascript"></script>
     <script src="js/pagefunctions.js" type="text/javascript"></script>
-    <script src="js/Braintree.js"></script>
+    <script src="https://js.braintreegateway.com/js/braintree-2.28.0.min.js"></script>
 
     <style>
         html, body {
@@ -221,8 +221,8 @@
                                 <!-- nav -->
                                 <nav class="nav pull-left hidden">
                                     <ul class="changeStore">
-                                        <li>Picking up from: <a href="#" onclick="changeStore()">&nbsp; (change)</a></li>
-                                        <li>@ <a href="#" onclick="changeStore()"> &nbsp; (change)</a></li>
+                                        <li><em>Picking up from:</em> <a href="#" onclick="changeStore()">&nbsp; (change)</a></li>
+                                        <li><em>@</em> <a href="#" onclick="changeStore()"> &nbsp; (change)</a></li>
                                     </ul>
                                     <ul class="changeStoreSelect" style="display:none;">
                                         <li>
@@ -334,8 +334,8 @@
                                 <!-- nav -->
                                 <nav class="nav pull-left">
                                     <ul class="changeStore">
-                                        <li>Picking up from: <span class="currentSelectedStore"></span><a href="#" onclick="changeStore()">&nbsp;(change)</a></li>
-                                        <li>@ <span class="currentSelectedTime"></span><a href="#" onclick="changeStore()">&nbsp;(change)</a></li>
+                                        <li><em>Picking up from:</em> <span class="currentSelectedStore"></span><a href="#" onclick="changeStore()">&nbsp;(change)</a></li>
+                                        <li><em>@</em> <span class="currentSelectedTime"></span><a href="#" onclick="changeStore()">&nbsp;(change)</a></li>
                                     </ul>
                                     <ul class="changeStoreSelect" style="display:none;">
                                         <li>

@@ -378,13 +378,13 @@ function bindProducts(colelctionsResponse) {
 
                                 if (resultExtras != null && resultExtras.length > 0) {
 
-                                    newParent = newParent + '<div class="col-lg-3 col-md-3 col-sm-6 col-xs-12" data-toggle="modal"  data-target="#MenuSelect1" onclick="loadproduct(' + this["productId"] + ');">';
+                                    newParent = newParent + '<div class="col-lg-3 col-md-4 col-sm-6 col-xs-12" data-toggle="modal"  data-target="#MenuSelect1" onclick="loadproduct(' + this["productId"] + ');">';
                                 }
                                 else
-                                    newParent = newParent + '<div class="col-lg-3 col-md-3 col-sm-6 col-xs-12" data-toggle="modal"  data-target="#MenuSelect" onclick="loadproduct(' + this["productId"] + ');">';
+                                    newParent = newParent + '<div class="col-lg-3 col-md-4 col-sm-6 col-xs-12" data-toggle="modal"  data-target="#MenuSelect" onclick="loadproduct(' + this["productId"] + ');">';
                             }
                             else
-                                newParent = newParent + '<div class="col-lg-3 col-md-3 col-sm-6 col-xs-12" data-toggle="modal"  data-target="#MenuSelect1" onclick="loadproduct(' + this["productId"] + ');">';
+                                newParent = newParent + '<div class="col-lg-3 col-md-4 col-sm-6 col-xs-12" data-toggle="modal"  data-target="#MenuSelect1" onclick="loadproduct(' + this["productId"] + ');">';
                             newParent = newParent + '<div class="menu_list_item">';
                             newParent = newParent + '<div class="holder matchHeight">';
                             newParent = newParent + '<div class="pic"><img src="' + productImg + '" alt="" width="322" height="290"></div>';

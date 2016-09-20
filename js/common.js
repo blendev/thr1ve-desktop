@@ -401,6 +401,7 @@ function placeOrder(nonce, repeatCustomer) {
                             message("<h1>Whoops!</h1>Customer email already exist.");
                             $("#personalDetailsInner").show();
                             $("#customerLoginForm").hide();
+                            $("#dvLogin").hide();
                             $("#returncustomerForm").hide();
                             $("#dvLogout").hide();
                         }
@@ -411,7 +412,8 @@ function placeOrder(nonce, repeatCustomer) {
                         else if (data.orderDetails.BraintreeStatus.indexOf("Nonce") < 0)
                             messageReqButtonClick("<h1>HANG ON...</h1>We weren't able to process your payment. Please check your details and try again.<br><button type='button' class='btnPopup'>OK, GOT IT!</button>");
 
-                        if (localStorage.getItem("customerNewId1") == null) {
+                        if (localStorage.getItem("customerNewId1") == null || ($("#newuser").is(":checked") && ($("#password").val() == null || $("#password").val() == ""))) {
+                            localStorage.removeItem("customerNewId1");
                             newCustomerToken();
                         }
                         else {
@@ -421,8 +423,12 @@ function placeOrder(nonce, repeatCustomer) {
                     }
                     else {
 
-                        if (($("#rememberme").is(":checked")) && (data.customerId != null && data.customerId != undefined && data.customerId != "")) {
-                            localStorage.setItem("customerNewId1", data.customerId);
+                        if ($("#rememberme").is(":checked")) {
+                            if ((data.customerId != null && data.customerId != undefined && data.customerId != ""))
+                                localStorage.setItem("customerNewId1", data.customerId);
+                            else
+                                localStorage.removeItem("customerNewId1");
+
                             localStorage.setItem("customerfirstName", data.firstName);
                             localStorage.setItem("customerlastName", data.lastName);
                             localStorage.setItem("customerEmailAddress", data.emailAddress);
