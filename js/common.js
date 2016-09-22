@@ -275,7 +275,7 @@ function newCustomerToken() {
                         }
                     },
                     onPaymentMethodReceived: function (nonce) {
-                        debugger;
+                        
                         placeOrder(nonce, 0);
                     }
                 });

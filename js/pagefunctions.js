@@ -6,8 +6,8 @@ $(document).ajaxStop(function () {
     if ($("body").hasClass("loading")) $("body").removeClass("loading"); // Hide spinning wheel when ajax query is finished
 });
 
-//var apiURL = "https://order.thr1ve.me/api/";            //Desktop API
-var apiURL = "http://localhost:53095/api/";
+var apiURL = "https://order.thr1ve.me/api/";            //Desktop API
+//var apiURL = "http://localhost:53095/api/";
 
 $(document).ready(function () {
     //initMap();
@@ -195,19 +195,19 @@ function createSession(refreshStores) {
                         success: function (data) {
                             $(".selectStore").empty();
                             $(".selectStore").append($("<option>", { selected: true, value: "0", text: "Please Select..." }));
-                            initializeMapMarkers(null, "1");
+                            //initializeMapMarkers(null, "1");
                             localStorage.setItem("storeList", JSON.stringify(data.stores));
                             $.each(data.stores, function () {
                                 $(".selectStore").append($("<option>", { value: this["StoreId"], text: this["StoreName"] }));
-                                var _Latitude = this["Latitude"];
-                                var _Longitude = this["Longitude"];
-                                if (_Latitude != null && _Longitude != null) {
-                                    var pos = {
-                                        lat: _Latitude,
-                                        lng: _Longitude
-                                    };
-                                    initializeMapMarkers(pos, "2", this["StoreName"], this["Image"], this["PhoneNumber"], this["OpenTimeText"], this["StoreId"]);
-                                }
+                                //var _Latitude = this["Latitude"];
+                                //var _Longitude = this["Longitude"];
+                                //if (_Latitude != null && _Longitude != null) {
+                                //    var pos = {
+                                //        lat: _Latitude,
+                                //        lng: _Longitude
+                                //    };
+                                //    initializeMapMarkers(pos, "2", this["StoreName"], this["Image"], this["PhoneNumber"], this["OpenTimeText"], this["StoreId"]);
+                                //}
                             });
                             selectStore();
                         },
@@ -367,10 +367,11 @@ function bindProducts(colelctionsResponse) {
 
                         if (this["title"].indexOf("#") < 0) {
                             var productImg = processImage(this["image"]);
+
                             if (this.variants == null || this.variants.length === 0) {
 
                                 var extrasExtra = this.extras;
-                                var vId = extrasExtra == null ? null : extrasExtra[0].variantId;
+                                var vId = extrasExtra == null ? null : extrasExtra.length == 0 ? null : extrasExtra[0].variantId;
                                 var resultExtras = null;
                                 if (vId != null && vId != undefined) {
                                     resultExtras = productionCollection.filter(function (obj) { return obj.variantId == vId; });
@@ -525,11 +526,12 @@ function getCart() {
                 $(".table1").empty();
                 var _total = 0;
                 $.each(data.cart, function () {
+                    
                     var extraItems = "";
                     if (this.ExtraName != null && this.ExtraName != "")
                         extraItems = this.ExtraName;
-                    else if (this.VariantTitle != null && this.VariantTitle != "")
-                        extraItems = this.VariantTitle;
+                    if (this.VariantTitle != null && this.VariantTitle != "")
+                        extraItems = extraItems + "," + this.VariantTitle;
 
                     _total = _total + (parseFloat(this.price) + parseFloat(this.ExtraPrice));
                     $(".table1").append("<tr>" +
@@ -768,6 +770,37 @@ function loadproduct(productId) {
                     $(this).find(".prodImg").toggleClass("open_close_img");
                 });
             }
+
+            if (result[0].extras != null && result[0].extras.length > 0) {
+                $.each(result[0].extras, function () {
+                    
+                    var _extraprice = "";
+                    if (this["price"] > 0)
+                        _extraprice = "$" + this["price"];
+
+                    $("#variantSteps").append("<h2>Any Extras?</h2>");
+                    var newElement = $('<div class="productList"></div>');
+                    $("#variantSteps").append(newElement);
+
+                    var innerElements = "<ul class='add_item1'>"
+                    var productImg = processImage(this["image"]);
+
+                    innerElements = innerElements + '<li><div class="card"><div class="prodImg"></div><img src="' + productImg + '" alt="">'
+                                            + '<div class="detail"><h4 id="' + this["variantId"] + '">' + this["title"] + '</h4><span></span>'
+                                            + '</div></div></li>';
+                    innerElements = innerElements + '</ul>';
+                    newElement.append(innerElements);
+                    $(".add_item1 li").click(function () {
+                        debugger;
+                        //$(this).parent("ul").find(".card").removeClass("open_close");
+                        $(this).find(".card").toggleClass("open_close");
+
+                        //$(this).parent("ul").find(".prodImg").removeClass("open_close_img");
+                        $(this).find(".prodImg").toggleClass("open_close_img");
+                    });
+                });
+            }
+
             $("#addvarianttoCart").show();
 
             $(".add_item li").click(function () {
@@ -785,6 +818,7 @@ function loadproduct(productId) {
 }
 
 function loadExtrasExtra(result) {
+
     var data = [];
     data = JSON.parse(localStorage.getItem('productCollection'));
     $("#variantSteps").empty();
@@ -897,10 +931,17 @@ function addvarianttocart() {
     var _variantTitle = "";
     var variantSteps = localStorage.getItem("variantSteps");
     $.each($('.card.open_close'), function () {
-
         _variantTitle = _variantTitle + $(this).find("h3").text() + ",";
     });
-    if (variantSteps == $('.card.open_close').length) {
+    var extras = [];
+    var variantSteps = localStorage.getItem("variantSteps");
+    $.each($('.card.open_close'), function () {
+        
+        if ($(this).find("h4") != null && $(this).find("h4")[0] != null && $(this).find("h4")[0].id != null)
+            extras.push({ 'variantId': '' + $(this).find("h4")[0].id + '' });
+    });
+    
+    if (variantSteps <= $('.card.open_close').length) {
         _variantTitle = _variantTitle.substring(0, _variantTitle.length - 1);
         if (checkSession()) {
             $.ajax({
@@ -918,7 +959,8 @@ function addvarianttocart() {
                         time: $(".selectTime").val(),
                         variantId: data.VariantId,
                         qty: "1",
-                        variantTitle: _variantTitle
+                        variantTitle: _variantTitle,
+                        extras: extras
                     }
                     if (data == null || data.isSuccess == false) {
                         message("<h1>Whoops!</h1>Invalid Combination.");
